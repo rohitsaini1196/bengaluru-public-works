@@ -1,13 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Signals — {{ site_name }}{% endblock %}
 {% block content %}
-<article class="detail">
-<h1>Signals</h1>
+{% include "_datatabs.html" %}
+<article class="datahead">
+<h1>All signals</h1>
 <p class="lede">Patterns in the public record that are worth a closer look. A signal is <b>not</b> a finding of wrongdoing. Most have ordinary explanations: re-tendering, variations, annual maintenance contracts, late bill settlement. Each one states how it was computed, and whether it rests on <span class="conf c-ok">confirmed</span> or <span class="conf c-inf">inferred</span> facts.</p>
 
+<p class="notice">Signals are the raw first pass. The <a href="{{ url_for('cases_page') }}">cases</a> are what survived a document review; most signals did not.</p>
 {% for code, rows in by_code.items() %}
-<section class="card">
-  <h2>{{ SIGNAL_NAMES.get(code, code) }} <span class="muted small">· {{ rows|length }} project{{ 's' if rows|length != 1 }}</span></h2>
+<details class="card sigtype">
+  <summary><b>{{ SIGNAL_NAMES.get(code, code) }}</b> <span class="mono muted small">{{ rows|length }} project{{ 's' if rows|length != 1 }}</span></summary>
   <ul class="slist">
   {% for s in rows %}
     <li class="sig sev-{{ s.severity }}"><span class="sev">{{ s.severity }}</span>
@@ -16,7 +18,7 @@
     </li>
   {% endfor %}
   </ul>
-</section>
+</details>
 {% endfor %}
 
 <section class="card">

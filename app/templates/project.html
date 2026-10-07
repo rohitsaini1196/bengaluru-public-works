@@ -30,23 +30,26 @@
 {%- endmacro %}
 
 {% block content %}
-<p class="crumb"><a href="{{ url_for('index') }}">← All projects</a></p>
+<p class="crumb"><a href="{{ url_for('index') }}">← All works</a></p>
 <article class="detail">
+  <p class="kicker">{{ p.category or 'Public work' }}{% if p.job_numbers %} · job {{ p.job_numbers }}{% endif %}</p>
   <h1>{{ p.title }}</h1>
   <div class="pmeta">
     <span class="badge {{ status_class(p.status) }}">{{ p.status or 'Status unknown' }}</span>
-    <span class="tag">{{ p.category }}</span>
     <span class="muted">{{ p.department }}{% if p.office %} · {{ p.office }}{% endif %}</span>
   </div>
+  <div class="keyfigs">
+    <div><b>{{ p.contract_value|inr or '—' }}</b><span>contract / award{% if facts.contract_value %} · {{ facts.contract_value.confidence }}{% endif %}</span></div>
+    <div><b>{{ p.payments_gross|inr or '—' }}</b><span>paid, gross</span></div>
+    <div><b>{{ p.n_bills or 0 }}</b><span>bills</span></div>
+    <div><b>{{ p.last_activity|dt or '—' }}</b><span>last activity</span></div>
+  </div>
+  {{ lifecycle_strip }}
   <div class="ids">
-    {% if p.job_numbers %}<span>BBMP job <b class="mono">{{ p.job_numbers }}</b></span>{% endif %}
     {% if p.tender_numbers %}<span>Tender <b class="mono">{{ p.tender_numbers }}</b></span>{% endif %}
-    <span class="lc">Lifecycle evidence
-      {% for s in ['planned','awarded','work','money','outcome','evidence'] %}<i class="dot {{ 'on' if stages.get(s) }}" title="{{ s }}: {{ 'evidence found' if stages.get(s) else 'no evidence' }}"></i>{% endfor %}
-      {{ p.lifecycle }}/6</span>
     {% if p.link_confidence in ('high','medium') %}<span class="chip inf">tender ↔ bills linked by matching ({{ p.link_confidence }} confidence)</span>
     {% elif p.link_confidence == 'none' %}<span class="chip">no tender found for these bills</span>
-    {% else %}<span class="chip">tender record only — no bills found yet</span>{% endif %}
+    {% else %}<span class="chip">tender record only, no bills found yet</span>{% endif %}
   </div>
 
   {% if case %}

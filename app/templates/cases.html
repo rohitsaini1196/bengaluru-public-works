@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Investigation cases — {{ site_name }}{% endblock %}
 {% block content %}
-<h1>Investigation cases</h1>
+<p class="kicker">Investigation cases</p>
+<h1>{{ cases|length }} questions the public record could not answer.</h1>
 <p class="lede">{{ cases|length }} cases out of {{ reviewed|length }} reviewed. A case is retained only when its question survived an attempt to
 resolve it from the public documents, and only when the evidence is high or medium confidence. Each pack states what was promised, what happened,
 why it merits follow-up, the legitimate explanations, and the specific record that would settle it.</p>
 <p class="notice">These are investigation leads, not accusations. "No explaining approval was found in the public records examined" does not mean no approval exists.</p>
 {% for c in cases %}
 <article class="card case-card">
-  <h2><span class="muted">#{{ c.rank }}</span> <a href="{{ url_for('case_page', case_id=c.case_id) }}">{{ c.primary_title }}</a></h2>
+  <span class="stamp">{{ c.status }}</span>
+  <h2><span class="rank">#{{ c.rank }}</span><a href="{{ url_for('case_page', case_id=c.case_id) }}">{{ c.primary_title }}</a></h2>
   <p class="small"><b>{{ c.title }}</b> · job <span class="mono">{{ c.job_number }}</span></p>
   <dl class="pfacts">
     <div><dt>Paid (gross)</dt><dd>{{ c.payments.gross_paid|inr or 'unknown' }}</dd></div>

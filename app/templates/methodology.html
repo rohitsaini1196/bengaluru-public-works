@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Methodology — {{ site_name }}{% endblock %}
 {% block content %}
-<article class="prose">
+{% include "_datatabs.html" %}
+<article class="prose datahead">
 <h1>Methodology</h1>
 <p class="lede">How {{ h.projects }} projects were reconstructed from public records, and how every claim stays traceable to its source.</p>
 
@@ -27,6 +28,9 @@ so bills whose description belongs to another area are set aside.</p>
 <p>Bills are grouped into a project by BBMP job number. Tenders are linked to jobs by scored matching (description, place, ward, work type, dates,
 contractor), never by a shared number, because none exists. Every link records its supporting and conflicting evidence and its confidence.
 Contractor name variants are merged only on strong evidence (registration codes, identical names after normalisation, shared contact details used in memory only).</p>
+<p>A tender is scored against each job on: description similarity (content words only), same kind of work, same places (block, main/cross, locality),
+ward numbers across the three ward maps, the awarded bidder appearing among the payees, bills starting after the tender, the amount paid against the
+tender value, and the engineering division. Each tender links to at most one job; weaker candidates are shown as "possible" and never merged.</p>
 
 <h2>4. Truth and provenance</h2>
 <p>Every fact is <span class="conf c-ok">confirmed</span> (read directly from a source record), <span class="conf c-inf">inferred</span>

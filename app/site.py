@@ -40,6 +40,60 @@ def headline():
     }
 
 
+STAGE_LABELS = [("planned", "Planned", "an estimate, sanction or plan entry"),
+                ("awarded", "Contracted", "a tender award or work order"),
+                ("work", "Work documented", "bill types, MB, bill forms or completion papers"),
+                ("money", "Paid", "at least one BBMP bill"),
+                ("outcome", "Completed", "a final bill or completion record"),
+                ("evidence", "Physical evidence", "site photos (not GPS-located)")]
+
+
+def story():
+    """Everything the home page shows, computed from the data (captions included)."""
+    from app import charts
+    d = db()
+    years = d.execute("""SELECT substr(payment_date, 1, 4) y, SUM(gross), COUNT(*) FROM records
+                         WHERE record_type = 'bill' AND payment_date IS NOT NULL GROUP BY y ORDER BY y""").fetchall()
+    peak = max(years, key=lambda r: r[1]) if years else None
+    projects = d.execute("SELECT slug, title, payments_gross, category FROM projects WHERE payments_gross > 0 ORDER BY payments_gross DESC").fetchall()
+    total = sum(r[2] for r in projects) or 1
+    top = projects[0] if projects else None
+    next9 = sum(r[2] for r in projects[1:10])
+    rest = total - (top[2] if top else 0) - next9
+    cats = d.execute("SELECT category, SUM(payments_gross), COUNT(*) FROM projects WHERE payments_gross > 0 GROUP BY category ORDER BY 2 DESC").fetchall()
+    payees = d.execute("""SELECT COALESCE(k.name, r.contractor) name, SUM(r.gross) paid, COUNT(*) bills, COUNT(DISTINCT r.project_id) works
+                          FROM records r LEFT JOIN contractors k ON k.entity = r.contractor_entity
+                          WHERE r.record_type = 'bill' AND r.payment_date IS NOT NULL AND COALESCE(r.contractor, '') != ''
+                          GROUP BY COALESCE(r.contractor_entity, r.contractor) ORDER BY paid DESC""").fetchall()
+    busiest = max(payees, key=lambda r: r["works"]) if payees else None
+    n_proj = d.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
+    stage = {k: 0 for k, _, _ in STAGE_LABELS}
+    for (st,) in d.execute("SELECT stages FROM projects"):
+        for k, v in json.loads(st or "{}").items():
+            if v and k in stage:
+                stage[k] += 1
+    reviewed = load_cases(retained_only=False)
+    return {
+        "years": charts.columns([(y, v, f"{n} bills") for y, v, n in years], "Gross payments by year", highlight=peak[0] if peak else None),
+        "years_list": charts.hbars([(y, v, None, f"{n} bills") for y, v, n in years], "Gross payments by year",
+                                   highlight=peak[0] if peak else 0),
+        "peak": {"year": peak[0], "amount": peak[1], "bills": peak[2]} if peak else None,
+        "share": charts.share([(f"{top[1][:60]}…" if top else "", top[2] if top else 0, "s1"),
+                               ("The next 9 largest works", next9, "s2"), (f"The other {max(0, len(projects) - 10)} works", rest, "s3")],
+                              "Share of all payments"),
+        "top": top, "top_share": (top[2] / total) if top else 0, "next9": next9, "rest": rest, "n_paid_projects": len(projects), "total": total,
+        "cats": charts.hbars([(c or "Unclassified", v, None, f"{n} works") for c, v, n in cats], "Payments by kind of work"),
+        "payees": charts.hbars([(r["name"], r["paid"], None, f'{r["bills"]} bills · {r["works"]} work{"s" if r["works"] != 1 else ""}')
+                                for r in payees[:10]], "Payments by payee"),
+        "n_payees": len(payees), "busiest": dict(busiest) if busiest else None,
+        "funnel": charts.funnel([(label, stage[k], expl) for k, label, expl in STAGE_LABELS], n_proj, "Projects with evidence at each stage"),
+        "biggest": charts.hbars([(r["title"][:80], r["payments_gross"], url_for("project", slug=r["slug"]), r["category"]) for r in projects[:8]],
+                                "Largest works by payments"),
+        "reviewed": reviewed, "open": [c for c in reviewed if c.get("retained")],
+        "set_aside": [c for c in reviewed if not c.get("retained")],
+    }
+
+
 def load_cases(retained_only=True):
     if not db().execute("SELECT name FROM sqlite_master WHERE name='cases'").fetchone():
         return []
@@ -58,7 +112,7 @@ def register(app):
     def home():
         if request.args:                 # old links (/?q=…) pointed at the project list
             return redirect(url_for("index", **request.args.to_dict(flat=False)))
-        return render_template("home.html", h=headline(), cases=load_cases())
+        return render_template("home.html", h=headline(), cases=load_cases(), s=story())
 
     @app.route("/projects")
     def index():
@@ -99,7 +153,8 @@ def register(app):
         case = d.execute("SELECT case_id, status, retained, why FROM cases WHERE project_id = ?", (p["id"],)).fetchone()
         stages = json.loads(p["stages"] or "{}")
         img = bool(current_app.config.get("ENABLE_IMAGERY")) and "imagery" in facts
-        return render_template("project.html", img=img, p=p, facts=facts, bills=[r for r in recs if r["record_type"] == "bill"],
+        from app.charts import lifecycle as _lc
+        return render_template("project.html", lifecycle_strip=_lc(json.loads(p["stages"] or "{}"), [(k, l) for k, l, _ in STAGE_LABELS]), img=img, p=p, facts=facts, bills=[r for r in recs if r["record_type"] == "bill"],
                                tenders=[r for r in recs if r["record_type"] == "tender"], plans=[r for r in recs if r["record_type"] == "plan"],
                                links=links, sigs=sigs, stages=stages, events=timeline(facts, recs), chart=bill_chart(recs),
                                items=items, case=case)

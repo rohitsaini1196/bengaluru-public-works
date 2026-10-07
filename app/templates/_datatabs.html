@@ -1,0 +1,10 @@
+{# Tabs for the "About the data" section: one place for method, limits, sources and the project itself. #}
+{% set ep = request.endpoint %}
+<p class="kicker">About the data</p>
+<nav class="tabs" aria-label="About the data">
+  <a href="{{ url_for('methodology') }}" class="{{ 'on' if ep == 'methodology' }}">Methodology</a>
+  <a href="{{ url_for('coverage') }}" class="{{ 'on' if ep == 'coverage' }}">Coverage &amp; limits</a>
+  <a href="{{ url_for('sources') }}" class="{{ 'on' if ep == 'sources' }}">Sources</a>
+  <a href="{{ url_for('signals_page') }}" class="{{ 'on' if ep == 'signals_page' }}">All signals</a>
+  <a href="{{ url_for('about') }}" class="{{ 'on' if ep == 'about' }}">About</a>
+</nav>

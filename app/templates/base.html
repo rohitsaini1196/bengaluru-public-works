@@ -9,18 +9,17 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 {% endif %}<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+{% set ep = request.endpoint or '' %}
+{% set data_eps = ['methodology', 'coverage', 'sources', 'about', 'signals_page'] %}
 <body>
 <header class="top">
   <div class="wrap">
     <a class="brand" href="{{ url_for('home') }}">{{ site_name }} <span class="brand-area">{{ area }}</span></a>
     <nav aria-label="Main">
-      <a href="{{ url_for('index') }}">Projects</a>
-      <a href="{{ url_for('cases_page') }}">Cases</a>
-      <a href="{{ url_for('methodology') }}">Methodology</a>
-      <a href="{{ url_for('coverage') }}">Coverage &amp; limits</a>
-      <a href="{{ url_for('sources') }}">Sources</a>
-      <a href="{{ url_for('about') }}">About</a>
-      {% if repo_url %}<a href="{{ repo_url }}" rel="noopener">GitHub</a>{% endif %}
+      <a href="{{ url_for('index') }}" class="{{ 'on' if ep in ('index', 'project', 'contractor') }}">Projects</a>
+      <a href="{{ url_for('cases_page') }}" class="{{ 'on' if ep in ('cases_page', 'case_page') }}">Cases</a>
+      <a href="{{ url_for('methodology') }}" class="{{ 'on' if ep in data_eps }}">About the data</a>
+      {% if repo_url %}<a href="{{ repo_url }}" rel="noopener">GitHub ↗</a>{% endif %}
     </nav>
   </div>
 </header>
@@ -28,11 +27,10 @@
 {% block content %}{% if error %}<p class="empty">{{ error }} <a href="{{ url_for('index') }}">Back to all projects</a></p>{% endif %}{% endblock %}
 </main>
 <footer class="wrap foot">
-  Reconstructed from public BBMP IFMS, BBMP tender and Karnataka Public Procurement Portal records. Every fact is marked
-  <span class="conf c-ok">confirmed</span> (in a source record), <span class="conf c-inf">inferred</span> (derived or matched, reasoning shown)
-  or <span class="conf c-unk">unknown</span>. Nothing is filled in.
+  Reconstructed from public BBMP IFMS, BBMP tender and Karnataka Public Procurement Portal records. Every fact is
+  <span class="conf c-ok">confirmed</span> <span class="conf c-inf">inferred</span> or <span class="conf c-unk">unknown</span>, and links to its source.
   <b>Signals and cases are observations for follow-up, not findings of wrongdoing.</b>
-  <a href="{{ url_for('coverage') }}">What this data cannot show</a>.
+  <a href="{{ url_for('coverage') }}">What this data cannot show</a> · <a href="{{ url_for('methodology') }}">Methodology</a> · <a href="{{ url_for('about') }}">About &amp; corrections</a>{% if repo_url %} · <a href="{{ repo_url }}" rel="noopener">Source code</a>{% endif %}
 </footer>
 </body>
 </html>

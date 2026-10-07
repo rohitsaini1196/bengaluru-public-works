@@ -8,8 +8,12 @@
 {% block content %}
 <p class="crumb"><a href="{{ url_for('cases_page') }}">← All cases</a></p>
 <article class="detail">
+  <div class="dossier-head">
+  <p class="kicker">Case file · {{ c.case_id }}</p>
+  <span class="stamp {{ 'closed' if not c.retained }}">{{ c.status if c.retained else 'set aside' }}</span>
   <h1>{{ c.primary_title or 'Reviewed project' }}</h1>
-  <div class="pmeta"><span class="mono">{{ c.case_id }}</span> · <span class="chip">{{ c.status }}</span> · confidence <b>{{ c.confidence or 'n/a' }}</b>
+  </div>
+  <div class="pmeta"><span class="mono">{{ c.case_id }}</span> · confidence <b>{{ c.confidence or 'n/a' }}</b>
     {% if c.case_score %} · priority score {{ c.case_score }}/100 <span class="muted">(ranking aid, not a judgement)</span>{% endif %}</div>
   {% if not c.retained %}<p class="notice">This project was reviewed and set aside: {{ c.why_not_retained }}</p>{% endif %}
 

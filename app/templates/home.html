@@ -1,36 +1,111 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero">
-  <h1>{{ site_name }}</h1>
-  <p class="area-line">{{ area }}, {{ city }}</p>
-  <p class="lede">A source-linked reconstruction of public works in {{ area }}, {{ city }}: what was promised, who received the work,
-  what was paid, what documents say was completed, and where questions remain. Reconstructed from public BBMP IFMS and KPPP records.</p>
-  <p class="notice">Signals are observations for follow-up, not findings of wrongdoing. A signal can disappear when better evidence is found, and many have.</p>
-  <div class="kpis">
-    <div class="kpi"><span class="kpi-v">{{ h.projects }}</span><span class="kpi-l">projects reconstructed ({{ h.with_bills }} with BBMP bills)</span></div>
-    <div class="kpi"><span class="kpi-v">{{ h.paid_bills }}</span><span class="kpi-l">paid bills · {{ h.paid_total|inr }} gross</span></div>
-    <div class="kpi"><span class="kpi-v">{{ h.cases }}</span><span class="kpi-l">investigation-ready cases, from {{ h.reviewed }} reviewed</span></div>
-    <div class="kpi"><span class="kpi-v">{{ (h.first or '')[:4] }}–{{ (h.last or '')[:4] }}</span><span class="kpi-l">payments covered · {{ h.sources }} source files</span></div>
+<section class="front">
+  <p class="kicker">{{ area }} · {{ city }} · {{ (h.first or '')[:4] }}–{{ (h.last or '')[:4] }}</p>
+  <h1>{{ (s.total / 1e7)|round|int }} crore rupees of public works, <em>traced bill by bill.</em></h1>
+  <p class="lede">Every road, drain, footpath and park job in {{ area }} that BBMP paid for, rebuilt from public government records:
+  what was promised, who got the work, what was paid, what the paperwork says was done, and where questions remain.
+  Every number links back to the record it came from.</p>
+  <div class="stats">
+    <div class="stat"><b>{{ h.projects }}</b><span>works reconstructed</span></div>
+    <div class="stat"><b>{{ h.paid_bills }}</b><span>paid bills, {{ h.paid_total|inr }}</span></div>
+    <div class="stat"><b>{{ s.n_payees }}</b><span>contractors and agencies paid</span></div>
+    <div class="stat"><b>{{ h.cases }}</b><span>open questions, from {{ h.reviewed }} reviewed</span></div>
+  </div>
+  <p class="notice">Signals and cases here are observations for follow-up, not findings of wrongdoing. Most of the alarms we raised were later explained by documents (see below).</p>
+</section>
+
+<section class="sec">
+  <div class="sec-grid">
+    <div class="say">
+      <p class="kicker">01 · The money, year by year</p>
+      <h2>Payments peaked in {{ s.peak.year }}.</h2>
+      {% if s.peak %}<span class="big">{{ s.peak.amount|inr }}</span>
+      <p>paid in {{ s.peak.year }} across {{ s.peak.bills }} bills. Gross amounts by the date BBMP's treasury released each payment (RTGS).
+      The public payment record starts in mid-2015.</p>{% endif %}
+    </div>
+    <div><div class="only-wide">{{ s.years }}</div><div class="only-narrow">{{ s.years_list }}</div>
+      <p class="chart-note">Gross payments by payment year.</p></div>
   </div>
 </section>
 
-<div class="cards">
-  <a class="card nav-card" href="{{ url_for('index') }}"><h2>Explore projects</h2><p>Search by road, block, contractor or job number. Every figure links to its source.</p></a>
-  <a class="card nav-card" href="{{ url_for('cases_page') }}"><h2>Investigation cases</h2><p>{{ h.cases }} cases where a question survived document review, each with an evidence pack and specific RTI requests.</p></a>
-  <a class="card nav-card" href="{{ url_for('methodology') }}"><h2>Methodology</h2><p>Sources, discovery, how records are linked, how quantities are read and checked, how signals are reviewed.</p></a>
-  <a class="card nav-card" href="{{ url_for('coverage') }}"><h2>Coverage &amp; limitations</h2><p>What the public record can and cannot establish, stated plainly.</p></a>
-</div>
-
-{% if cases %}
-<section class="card">
-  <h2>Open questions</h2>
-  <ol class="caselist">
-  {% for c in cases %}
-    <li><a href="{{ url_for('case_page', case_id=c.case_id) }}"><b>{{ c.primary_title }}</b></a> — {{ c.title[:110] }}
-      <span class="muted small">· job {{ c.job_number }} · {{ c.confidence }} confidence · {{ c.status }}</span></li>
-  {% endfor %}
-  </ol>
+<section class="sec">
+  <div class="sec-grid">
+    <div class="say">
+      <p class="kicker">02 · One project, almost a third of the money</p>
+      <h2>{% if s.top.payments_gross > s.rest %}One work outweighs all {{ s.n_paid_projects - 10 }} smaller works combined.
+        {% elif s.top.payments_gross > s.next9 %}One work outweighs the next nine largest works combined.
+        {% else %}One work stands far above the rest.{% endif %}</h2>
+      <span class="big">{{ (s.top_share * 100)|round|int }}%</span>
+      <p>of everything paid went to one job: <a href="{{ url_for('project', slug=s.top.slug) }}">{{ s.top.title[:90] }}…</a>
+      It is also the first <a href="{{ url_for('cases_page') }}">open case</a>: three completion dates have passed with no final bill.</p>
+    </div>
+    <div>{{ s.share }}
+      <h3 style="margin-top:26px">The largest works</h3>{{ s.biggest }}</div>
+  </div>
 </section>
-{% endif %}
-{% if h.published_at %}<p class="muted small">Data published {{ h.published_at[:10] }}.</p>{% endif %}
+
+<section class="sec">
+  <div class="sec-grid">
+    <div class="say">
+      <p class="kicker">03 · Who was paid</p>
+      <h2>{{ s.n_payees }} payees. A few giants, one agency with many small jobs.</h2>
+      {% if s.busiest %}<p><b>{{ s.busiest.name }}</b> was paid for {{ s.busiest.works }} different works ({{ s.busiest.bills }} bills, {{ s.busiest.paid|inr }}),
+      more works than any other payee, but at a fraction of the corridor's scale.</p>{% endif %}
+      <p class="small muted">Payees as named on BBMP bills. One contract can have several payees (e.g. an escrow account for a successor contractor).</p>
+    </div>
+    <div>{{ s.payees }}</div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-grid">
+    <div class="say">
+      <p class="kicker">04 · What it was spent on</p>
+      <h2>Mostly roads, drains and footpaths, plus one flyover.</h2>
+      <p>Each work is classified from its own description. "Combined" works bundle asphalting, drains and footpaths in one job, the usual BBMP ward package.</p>
+    </div>
+    <div>{{ s.cats }}</div>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="sec-grid">
+    <div class="say">
+      <p class="kicker">05 · What the paper trail can prove</p>
+      <h2>Payment is well documented. Plans and physical proof are not.</h2>
+      <p>For each work, how many of the six stages have public evidence. Almost every work has bills; far fewer have a public plan or estimate,
+      and no site photo carries a GPS location.</p>
+      <p><a href="{{ url_for('coverage') }}">What this data cannot show →</a></p>
+    </div>
+    <div>{{ s.funnel }}</div>
+  </div>
+</section>
+
+<section class="sec">
+  <p class="kicker">06 · {{ s.reviewed|length }} flagged, {{ s.set_aside|length }} set aside</p>
+  <h2>We tried to explain every alarm before publishing it. Most of them dissolved.</h2>
+  <p class="lede">Each tile is a project our signals flagged. We then read its work slips, final bills, work orders and extension orders.
+  Struck-out tiles were explained (a second contract, an approved variation, a document filed under another name) or turned out to be data artefacts.
+  The {{ s.open|length }} dark tiles are questions the public record could not answer.</p>
+  <div class="tiles">
+    {% for c in s.open %}<a class="tile open" href="{{ url_for('case_page', case_id=c.case_id) }}"><span class="t-job">{{ c.job_number }}</span>
+      <span class="t-title">{{ c.primary_title }}</span><span class="t-out">open · {{ c.status }}</span></a>{% endfor %}
+    {% for c in s.set_aside %}<a class="tile shut" href="{{ url_for('case_page', case_id=c.case_id) }}"><span class="t-job">{{ c.job_number }}</span>
+      <span class="t-title">{{ c.title[:70] }}</span><span class="t-out">{{ ((c.resolved_issues or [{}])[0].outcome or 'no issue')|replace('_', ' ') }}</span></a>{% endfor %}
+  </div>
+  <div class="legend"><span><i class="lo"></i>open question</span><span><i class="ls"></i>explained, artefact or too weak to present</span></div>
+</section>
+
+<section class="sec">
+  <p class="kicker">Go further</p>
+  <div class="cta">
+    <a href="{{ url_for('index') }}"><b>Explore all {{ h.projects }} works →</b><span>Search by road, block, contractor or job number.</span></a>
+    <a href="{{ url_for('cases_page') }}"><b>Read the {{ h.cases }} cases →</b><span>Evidence packs with the exact record that would settle each one.</span></a>
+    <a href="{{ url_for('methodology') }}"><b>How it was built →</b><span>Sources, matching, OCR with arithmetic checks.</span></a>
+    <a href="{{ url_for('coverage') }}"><b>Limits of the record →</b><span>What public documents cannot establish.</span></a>
+    <a href="{{ url_for('about') }}"><b>About &amp; corrections →</b><span>Found an error or a document that explains a case?</span></a>
+  </div>
+  {% if h.published_at %}<p class="small muted" style="margin-top:14px">Data published {{ h.published_at[:10] }}.</p>{% endif %}
+</section>
 {% endblock %}
