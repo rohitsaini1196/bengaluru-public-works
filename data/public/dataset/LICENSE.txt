@@ -1,0 +1,5 @@
+Bengaluru Public Works Explorer — generated dataset.
+Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+Attribution: Bengaluru Public Works Explorer (https://rohitsaini1196.github.io/bengaluru-public-works/), CC BY 4.0.
+Keep the confidence labels (confirmed / inferred / unknown) with any fact you reuse. Signals and cases are observations
+for follow-up, not findings of wrongdoing. Source documents belong to their publishers and are linked, not included.

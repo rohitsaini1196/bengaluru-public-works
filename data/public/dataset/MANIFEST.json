@@ -30,5 +30,9 @@
  "cases.json": {
   "rows": 23,
   "sha256": "cbfcf6e1f840b08a7b275becbd6782c4fb29c8746aa241d243d11cdb28055cc2"
+ },
+ "LICENSE.txt": {
+  "rows": null,
+  "sha256": "333ed54ce08682522357b4bddfa628a214b7256d0a69bbab41c47d6070d49507"
  }
 }
