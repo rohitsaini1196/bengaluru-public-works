@@ -26,3 +26,6 @@ site/
 .claude/
 .vscode/
 .idea/
+
+# --- internal working notes (research reports, planning, outreach, RTI drafts); kept locally, not published
+internal/

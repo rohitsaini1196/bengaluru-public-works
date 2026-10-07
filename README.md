@@ -165,4 +165,3 @@ Collection was cached and rate-limited to about one request per second. Contract
 - **Generated data, reports, case packs and site content:** CC BY 4.0 ([DATA_LICENSE.md](DATA_LICENSE.md)).
 - **Government documents behind the source links** belong to their publishers and are linked, not redistributed ([LICENSE_NOTES.md](LICENSE_NOTES.md)).
 
-Phase-by-phase research reports: `REPORT.md`, `PHASE2_REPORT.md` … `PHASE6_REPORT.md`. The pre-release README is in `docs/README_PHASES_1-6.md`.

@@ -8,7 +8,7 @@ This is not legal advice. Where rights are unclear, nothing is licensed, and the
 |---|---|---|
 | **Source code** (`app/`, `ingest/`, `experiments/`, `tests/`, `deploy/`, config) | **MIT** (in `LICENSE`) | Conventional and permissive, and compatible with every dependency: Flask, Werkzeug and Jinja2 (BSD-3), Gunicorn (MIT), openpyxl and certifi (MIT / MPL-2.0 data file), pypdf (BSD-3), Pillow (MIT-CMU style). Apache-2.0 is an equally good choice if an explicit patent grant matters to contributors. |
 | **Generated metadata** (`data/public/dataset/`: project summaries, facts, signals, work items, cases, discovery table; and the public DB) | **CC BY 4.0** (decided; see `DATA_LICENSE.md`) | This is a new compilation: structure, links, confidence labels and analysis. The underlying facts are government records. Attribution keeps the provenance chain intact. |
-| **Reports and case packs** (`*REPORT.md`, `cases/`, `CASE_INDEX.md`, `RTI_QUESTIONS.md`, `docs/`) | **CC BY 4.0** (`DATA_LICENSE.md`) | Original writing |
+| **Case packs and documentation** (`cases/`, `CASE_INDEX.md`, `CHANGELOG_DATA.md`, `docs/`) | **CC BY 4.0** (`DATA_LICENSE.md`) | Original writing |
 | **Cached government documents** (scanned work orders, bill forms, MBs, photos, KPPP files; `data/raw/`) | **Do not redistribute; link to the source URL** | Indian government works are protected by copyright (Copyright Act 1957, s.17(dd), s.52(1)(q)). Republication of some public documents is permitted, but no open licence covers these portals' attachments. The public site already links every document at its original URL. |
 | **Site photos** attached in IFMS | **Do not redistribute** | Same as above; some photos show people |
 | **Satellite before/after images** (`data/reality/`, Esri World Imagery via Wayback) | **Do not publish** | Esri's terms restrict redistribution. These images are shown only in the local dev app. |
@@ -20,7 +20,7 @@ The copyright holder line in `LICENSE` reads "Bengaluru Public Works Explorer co
 
 ### In the repository (open source)
 - Code, schemas (`ingest/schema.sql`), tests, deployment files, area configs.
-- Methodology and reports, case packs (`cases/`), `CASE_INDEX.md`, `RTI_QUESTIONS.md`.
+- Documentation, case packs (`cases/`), `CASE_INDEX.md`, the data changelog.
 - The scrubbed public dataset in `data/public/dataset/` (≈6 MB of CSV/JSON, with `MANIFEST.json` checksums). Alternatively, attach it to a GitHub release instead of committing it.
 - Small test fixtures inline in the tests. The tests that need the full database skip when it is absent.
 

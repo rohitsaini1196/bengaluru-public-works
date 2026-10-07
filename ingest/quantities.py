@@ -586,7 +586,7 @@ def fetch(projects, listing):
 
 # ---------------------------------------------------------------- analysis
 
-# Signal thresholds (explained in PHASE5_REPORT.md). They sit outside routine measurement variation;
+# Signal thresholds (stated on the site's methodology page). They sit outside routine measurement variation;
 # the contracts' own variation clauses were not available, so they are not contractual limits.
 BELOW = 0.75            # billed/measured < 75 % of the planned quantity
 ABOVE = 1.25            # billed/measured > 125 % of the planned quantity

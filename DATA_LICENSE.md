@@ -6,7 +6,7 @@ The **generated data** of the Bengaluru Public Works Explorer is licensed under 
 
 It covers:
 - `data/public/koramangala_public.db` and everything in `data/public/dataset/` (project summaries, facts, signals, work items, bills, discovery table, cases);
-- the reports and case packs (`*REPORT.md`, `cases/`, `CASE_INDEX.md`, `RTI_QUESTIONS.md`, `docs/`);
+- the case packs and documentation (`cases/`, `CASE_INDEX.md`, `CHANGELOG_DATA.md`, `docs/`);
 - the text and charts of the website.
 
 **Attribution:** please credit

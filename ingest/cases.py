@@ -9,7 +9,7 @@ Every sentence in a rendered case is generated from a structured field of the ca
 carries its evidence (source type, document, page, URL, method, confidence).
 
 Outputs: data/investigation_cases.json, table `cases` (via build), cases/<case_id>.md, CASE_INDEX.md,
-RTI_QUESTIONS.md.
+internal/RTI_QUESTIONS.md (working notes, not published).
 """
 import json
 import math
@@ -1090,7 +1090,8 @@ def write_markdown(data):
             R.append(f"{n}. **{r['record']}** — job {r['job']}" + (f"; {r['detail']}" if r["detail"] else "") + f". *Why:* {r['why']}")
         R.append("")
     R.insert(2, f"{n} requests across {sum(1 for c in retained if any(x['status'] not in DEAD and x['confidence'] != 'low' for x in c['issues']))} cases.")
-    (ROOT / "RTI_QUESTIONS.md").write_text("\n".join(R) + "\n")
+    (ROOT / "internal").mkdir(exist_ok=True)          # RTI drafts are working notes, not published (git-ignored)
+    (ROOT / "internal" / "RTI_QUESTIONS.md").write_text("\n".join(R) + "\n")
     data["rti_count"] = n
 
 
