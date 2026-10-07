@@ -1,0 +1,37 @@
+# Public deployment: Caddy (HTTPS, compression, request limits) -> Gunicorn -> read-only Flask app.
+#   DOMAIN=example.org PUBLIC_REPO_URL=https://github.com/<you>/<repo> docker compose up -d --build
+services:
+  web:
+    build: .
+    image: bengaluru-public-works:latest
+    restart: unless-stopped
+    environment:
+      PUBLIC_REPO_URL: ${PUBLIC_REPO_URL:-}
+      PUBLIC_CONTACT: ${PUBLIC_CONTACT:-}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-3}
+      RATE_LIMIT: ${RATE_LIMIT:-120}
+      API_RATE_LIMIT: ${API_RATE_LIMIT:-30}
+    read_only: true
+    tmpfs: ["/tmp"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    expose: ["8000"]          # not published on the host: only Caddy reaches it
+    mem_limit: 512m
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    depends_on: [web]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN, e.g. DOMAIN=example.org}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+volumes:
+  caddy_data:
+  caddy_config:

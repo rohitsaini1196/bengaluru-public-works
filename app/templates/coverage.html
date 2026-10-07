@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Coverage & limitations — {{ site_name }}{% endblock %}
+{% block content %}
+<article class="prose">
+<h1>Coverage &amp; limitations</h1>
+<p class="lede">What this reconstruction can and cannot establish. Transparency about gaps is part of the product.</p>
+
+<h2>What is covered</h2>
+<ul>
+  <li>{{ h.projects }} {{ area }} projects of at least ₹5 lakh; {{ h.with_bills }} with BBMP bills; {{ h.paid_bills }} paid bills from {{ h.first|dt }} to {{ h.last|dt }}.</li>
+  {% if cov and cov.discovery %}<li>{{ cov.discovery.bills }} paid bills on {{ cov.discovery.jobs }} job numbers found in BBMP's city-wide payment grid by the {{ area }} scope rules
+    ({{ cov.discovery.scope_basis.description }} by description, {{ cov.discovery.scope_basis.ward_prefix }} by ward prefix).</li>{% endif %}
+  {% if cov and cov.quantities %}<li>Quantities: {{ cov.quantities.projects_selected }} highest-value projects examined; planned-vs-billed comparisons for {{ cov.quantities.projects_with_comparison }};
+    {{ cov.quantities.documents_readable }} of {{ cov.quantities.documents_downloaded }} quantity documents yielded arithmetic-checked rows.</li>{% endif %}
+</ul>
+
+<h2>How complete is it?</h2>
+{% if cov and cov.denominator %}
+<p>For <b>paid</b> bills since mid-2015 the list is close to complete: independent checks found every known paid bill in BBMP's payment grid:</p>
+<ul>
+  <li>{{ cov.denominator.opencity_paid_bills_in_grid }} / {{ cov.denominator.opencity_paid_bills_since_may_2015 }} OpenCity-published paid bills;</li>
+  <li>{{ cov.denominator.known_jobs_in_grid }} / {{ cov.denominator.known_jobs_paid_since_may_2015 }} known {{ area }} jobs;</li>
+  <li>{{ cov.denominator.ifms_direct_paid_in_grid }} / {{ cov.denominator.ifms_direct_paid_bills }} paid bills fetched directly from IFMS.</li>
+</ul>
+{% endif %}
+
+<h2>Limitations</h2>
+<ul>
+  <li><b>The paid-bill denominator is reliable only from mid-2015.</b> Older bills come from published registers whose completeness is unknown.</li>
+  <li><b>Unpaid bills may be incomplete.</b> The payment grid lists only paid bills; bills stuck at an approval level are visible only for jobs already known.</li>
+  <li><b>Newer bill attachments require a login.</b> For bills from about mid-2024, IFMS shows no bill-level attachments (MB, bill form) without a session, and none were sought.</li>
+  <li><b>Absence from public attachments does not prove a document does not exist.</b> Approvals may exist on paper. Cases say "no explaining approval was found in the public records examined" for this reason.</li>
+  <li><b>Handwritten measurement books are usually not machine-readable</b>, so what was measured on site is mostly unverified.</li>
+  <li><b>OCR can fail.</b> Quantities are used only when the printed arithmetic checks out; values read from scans are marked inferred.</li>
+  <li><b>No GPS on site photos.</b> Locations come from work descriptions, not photos.</li>
+  <li><b>Administrative documents do not prove physical existence or quality.</b> A completion certificate is not a site inspection.</li>
+  <li><b>Job numbers and ward maps are complex.</b> The same job number can belong to different wards on the 198-, 225- and 243-ward maps; scope rules guard against this but can miss works described only by road names, or booked to zonal or departmental codes.</li>
+  <li><b>Tender ↔ bill links are inferred.</b> No public register maps tenders to job numbers; links carry a confidence and their evidence.</li>
+</ul>
+</article>
+{% endblock %}

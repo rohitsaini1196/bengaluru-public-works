@@ -1,0 +1,34 @@
+{
+ "projects.csv": {
+  "rows": 432,
+  "sha256": "212984dacd5093cc1705c2a5eacf2e292868006cb47ef22e5359f64490053a27"
+ },
+ "facts.csv": {
+  "rows": 10803,
+  "sha256": "21e01c9a40cf4f680718779c16bae0c486326987c80e0c8033ccd4649a510cad"
+ },
+ "signals.csv": {
+  "rows": 1140,
+  "sha256": "85da12418524b889c083121d7cb65db42d9e2d1b71bbe00b2a45221f344e3060"
+ },
+ "work_items.csv": {
+  "rows": 551,
+  "sha256": "63c704f408cff5e342240b25ddc2579ed646f20a6f94690551c023f22a7cb813"
+ },
+ "bills.csv": {
+  "rows": 599,
+  "sha256": "1d028eeb5cfdb4d2c0394a1663bc5e038ad9f6bea0a41a05ce628b79c10971fe"
+ },
+ "sources.csv": {
+  "rows": 56,
+  "sha256": "de3233111f3f424b83d90901794a728cd63cb6b3e9e82b487af84dc1cdf01569"
+ },
+ "discovery.csv": {
+  "rows": 686,
+  "sha256": "7693bcd9c5b56c700860ca05d7d35e93487e7dcb7aec4b121c9ba52a9365fc4b"
+ },
+ "cases.json": {
+  "rows": 23,
+  "sha256": "cbfcf6e1f840b08a7b275becbd6782c4fb29c8746aa241d243d11cdb28055cc2"
+ }
+}

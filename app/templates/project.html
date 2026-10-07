@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}{{ p.title[:80] }} — {{ site_name }}{% endblock %}
+
+{% macro conf(c) -%}
+  {%- if c == 'confirmed' %}<span class="conf c-ok" title="Directly supported by a source record">confirmed</span>
+  {%- elif c == 'inferred' %}<span class="conf c-inf" title="Derived or matched — see explanation">inferred</span>
+  {%- else %}<span class="conf c-unk" title="Not published in any source we found">unknown</span>{%- endif -%}
+{%- endmacro %}
+
+{% macro factrow(field) -%}
+  {%- set f = facts.get(field) -%}
+  {%- if f %}
+  <div class="fact {{ 'is-unk' if f.confidence == 'unknown' }}">
+    <div class="fk">{{ LABELS[field] }}</div>
+    <div class="fv">
+      {%- if f.value is not none -%}
+        {%- if field == 'description' -%}<span class="small">{{ f.value }}</span>
+        {%- elif field == 'contractor_identity' and p.contractor_entity -%}<a href="{{ url_for('contractor', entity=p.contractor_entity) }}">{{ f.value }}</a>
+        {%- elif field == 'final_bill' -%}Raised{% if f.value|length == 10 %} {{ f.value|dt }}{% endif %}
+        {%- else -%}{{ fmt_fact(field, f.value) }}{%- endif -%}
+      {%- else -%}<span class="unk">Unknown</span>{%- endif %}
+      {{ conf(f.confidence) }}
+      {%- for e in f.evidence[:2] %} <a class="src" href="{{ e.url }}" target="_blank" rel="noopener" title="{{ e.label }}{% if e.rows %} · row {{ e.rows[:6]|join(', ') }}{% endif %}{% if e.note %} — {{ e.note }}{% endif %}">[{{ loop.index }}]</a>{% endfor %}
+      {%- if f.evidence|length > 2 %}<span class="muted small"> +{{ f.evidence|length - 2 }}</span>{% endif %}
+      {%- if f.explanation and field != 'description' %}<div class="why">{{ f.explanation }}</div>{% endif %}
+      {%- if f.via %}<div class="why via">↳ from a tender matched to these bills ({{ p.link_confidence }} confidence) — <a href="#links">why</a></div>{% endif %}
+    </div>
+  </div>
+  {%- endif %}
+{%- endmacro %}
+
+{% block content %}
+<p class="crumb"><a href="{{ url_for('index') }}">← All projects</a></p>
+<article class="detail">
+  <h1>{{ p.title }}</h1>
+  <div class="pmeta">
+    <span class="badge {{ status_class(p.status) }}">{{ p.status or 'Status unknown' }}</span>
+    <span class="tag">{{ p.category }}</span>
+    <span class="muted">{{ p.department }}{% if p.office %} · {{ p.office }}{% endif %}</span>
+  </div>
+  <div class="ids">
+    {% if p.job_numbers %}<span>BBMP job <b class="mono">{{ p.job_numbers }}</b></span>{% endif %}
+    {% if p.tender_numbers %}<span>Tender <b class="mono">{{ p.tender_numbers }}</b></span>{% endif %}
+    <span class="lc">Lifecycle evidence
+      {% for s in ['planned','awarded','work','money','outcome','evidence'] %}<i class="dot {{ 'on' if stages.get(s) }}" title="{{ s }}: {{ 'evidence found' if stages.get(s) else 'no evidence' }}"></i>{% endfor %}
+      {{ p.lifecycle }}/6</span>
+    {% if p.link_confidence in ('high','medium') %}<span class="chip inf">tender ↔ bills linked by matching ({{ p.link_confidence }} confidence)</span>
+    {% elif p.link_confidence == 'none' %}<span class="chip">no tender found for these bills</span>
+    {% else %}<span class="chip">tender record only — no bills found yet</span>{% endif %}
+  </div>
+
+  {% if case %}
+  <p class="notice">{% if case.retained %}This project is an <a href="{{ url_for('case_page', case_id=case.case_id) }}">investigation case</a> ({{ case.status }}).
+    {% else %}This project was reviewed for the investigation cases and set aside: <a href="{{ url_for('case_page', case_id=case.case_id) }}">why</a>.{% endif %}</p>
+  {% endif %}
+
+  {% if sigs %}
+  <section class="signals">
+    <h2>Signals <span class="muted small">— patterns worth a closer look, not findings of wrongdoing</span></h2>
+    <ul>
+    {% for s in sigs %}
+      <li class="sig sev-{{ s.severity }}">
+        <span class="sev">{{ s.severity }}</span> <b>{{ s.title }}</b> {{ conf(s.confidence) }}
+        <div class="why">{{ s.detail }}
+          {% for e in s.evidence[:2] %} <a class="src" href="{{ e.url }}" target="_blank" rel="noopener">[source]</a>{% endfor %}
+          {% if s.related %}<br>Related: {% for r in s.related[:6] %}<a href="{{ url_for('project', slug=r) }}" class="mono">{{ r }}</a>{{ ', ' if not loop.last }}{% endfor %}{% if s.related|length > 6 %} …{% endif %}{% endif %}
+        </div>
+      </li>
+    {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <div class="story">
+  {% for stage in ['planned','awarded','work','money','outcome','evidence'] %}
+    <section class="card stage {{ 'stage-empty' if not stages.get(stage) }}">
+      <h2>{{ STAGE_TITLES[stage] }}</h2>
+      {% for field in STAGE_FIELDS[stage] %}{{ factrow(field) }}{% endfor %}
+      {% if stage == 'awarded' %}
+        {% for t in tenders %}{% set x = t.extra|fromjson %}{% if x.bidders %}
+        <details class="bids"><summary>{{ x.bidders|length }} bid{{ 's' if x.bidders|length != 1 }} on {{ t.tender_number }}</summary>
+          <table class="grid"><tbody>{% for b in x.bidders %}<tr><td>{{ b.rank or '—' }}</td><td>{{ b.name }}</td><td class="num">{{ b.amount|inr_full }}</td></tr>{% endfor %}</tbody></table>
+          <a class="src" href="{{ x.comparative_url }}" target="_blank" rel="noopener">comparative statement (xlsx)</a></details>
+        {% endif %}{% endfor %}
+      {% endif %}
+      {% if stage == 'money' and chart %}
+        <svg class="spark" viewBox="0 0 100 42" preserveAspectRatio="none" role="img" aria-label="Cumulative payments over time">
+          <polyline points="0,40 {{ chart.points }}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <div class="spark-l small muted"><span>{{ chart.start|dt }}</span><span>cumulative payments</span><span>{{ chart.end|dt }}</span></div>
+      {% endif %}
+    </section>
+  {% endfor %}
+  </div>
+
+  {% if items %}
+  <section class="card" id="quantities">
+    <h2>Quantities: Schedule B vs billed <span class="muted small">— read from scanned documents; only rows where quantity × rate = amount are used</span></h2>
+    <div class="scroll"><table class="grid">
+      <thead><tr><th>Item</th><th>Unit</th><th class="num">Planned</th><th class="num">Rate</th><th class="num">Billed / measured</th><th class="num">Difference</th><th>Basis</th><th>Confidence</th><th>Source</th></tr></thead>
+      <tbody>{% for w in items[:40] %}
+        <tr><td class="small">{{ w.description[-90:] }}</td><td>{{ w.unit or '—' }}</td>
+          <td class="num">{{ '{:,.2f}'.format(w.estimated_quantity) if w.estimated_quantity is not none else '—' }}</td>
+          <td class="num">{{ w.estimated_rate|inr_full or '—' }}</td>
+          <td class="num">{{ '{:,.2f}'.format(w.compared_quantity) if w.compared_quantity is not none else '—' }}</td>
+          <td class="num">{{ ('{:+.0f}%'.format(w.variance_pct)) if w.variance_pct is not none else '—' }}</td>
+          <td class="small">{{ w.compared_basis or 'not billed / not read' }}</td>
+          <td class="small">{{ w.min_confidence }}</td>
+          <td class="small">{% for x in w.provenance[:2] %}<a class="src" href="{{ x.attachment_url }}" rel="noopener" title="{{ x.attachment_type }}, p.{{ x.page }} — {{ x.method }}; {{ x.check }}">[{{ loop.index }}]</a> {% endfor %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    <p class="small muted">Running-bill figures show progress at that bill, not final quantities. Comparisons are inferred; see <a href="{{ url_for('methodology') }}">methodology</a>.</p>
+  </section>
+  {% endif %}
+
+  {% if img %}
+  <section class="card">
+    <h2>Satellite imagery — before / after <span class="conf c-inf">inferred · experimental</span></h2>
+    <img src="{{ url_for('reality_file', slug=p.slug, fname='before_after.jpg') }}" alt="Before and after satellite imagery" style="width:100%;border-radius:6px">
+    <p class="small muted">{{ facts.imagery.explanation }} Imagery © Esri World Imagery (Wayback archive).</p>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2>Timeline</h2>
+    {% if events %}
+    <ol class="tl">
+      {% for e in events %}<li class="tl-{{ e.kind }}"><span class="tl-d">{{ e.date|dt }}</span> {{ e.label }}
+        {% if e.conf == 'inferred' %}<span class="conf c-inf">inferred</span>{% endif %}
+        {% if e.url %} <a class="src" href="{{ e.url }}" target="_blank" rel="noopener">source</a>{% endif %}</li>{% endfor %}
+    </ol>
+    {% else %}<p class="muted">No dated events.</p>{% endif %}
+  </section>
+
+  {% if links %}
+  <section class="card" id="links">
+    <h2>How the tender and the bills were connected</h2>
+    <p class="small muted">Tenders and BBMP bills share no common number, so connections are inferred from independent evidence. Accepted links feed the facts above (marked <span class="conf c-inf">inferred</span>); possible ones are listed only for review and change nothing.</p>
+    {% for l in links %}
+    <div class="link {{ l.status }}">
+      <div><b>{{ 'Linked' if l.status == 'accepted' else 'Possible — not merged' }}</b> ·
+        <span class="mono">{{ l.tender_base }}</span> ({{ 'KPPP' if l.tender_source == 'KPPP' else 'BBMP tender list 2013–18' }}) ·
+        confidence <b>{{ l.confidence }}</b> · description similarity {{ (l.text_similarity * 100)|round|int }}%</div>
+      <div class="small">“{{ l.tender_title }}” <a class="src" href="{{ l.tender_url }}" target="_blank" rel="noopener">source</a></div>
+      <div class="small"><span class="ok">✓</span> {{ l.support|join(' · ') or 'no corroboration' }}</div>
+      {% if l.conflict %}<div class="small"><span class="bad">✗</span> {{ l.conflict|join(' · ') }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% if tenders %}
+  <section class="card">
+    <h2>Tender notices</h2>
+    <div class="scroll"><table class="grid">
+      <thead><tr><th>Tender no.</th><th>Source</th><th>Published</th><th>Status</th><th class="num">Estimate</th><th class="num">Awarded</th><th>To</th><th>Time allowed</th><th>Link</th><th>Evidence</th></tr></thead>
+      <tbody>{% for t in tenders %}{% set x = t.extra|fromjson %}
+        <tr><td class="mono">{{ t.tender_number }}</td><td>{{ 'KPPP' if t.source_id == 'KPPP' else 'BBMP list' }}</td><td>{{ t.start_date|dt }}</td><td>{{ t.payment_status or '—' }}</td>
+          <td class="num">{{ x.ecv|inr or '—' }}</td><td class="num">{{ t.gross|inr or '—' }}</td><td>{{ t.contractor or '—' }}</td>
+          <td>{{ (x.period_days ~ ' days') if x.period_days else '—' }}</td><td>{{ t.link }}</td>
+          <td class="small"><a href="{{ t.source_url }}" target="_blank" rel="noopener">record</a>{% if x.bid_url and t.contractor %} · <a href="{{ x.bid_url }}" target="_blank" rel="noopener">award</a>{% endif %}{% if x.period_url %} · <a href="{{ x.period_url }}" target="_blank" rel="noopener">tender doc</a>{% endif %}{% if x.row %} · row {{ x.row }}{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  </section>
+  {% endif %}
+
+  {% if plans %}
+  <section class="card">
+    <h2>Planning records (archived BBMP documents)</h2>
+    <div class="scroll"><table class="grid">
+      <thead><tr><th>Document</th><th>Entry</th><th class="num">Amount</th><th>Status</th><th>Link</th><th>Source</th></tr></thead>
+      <tbody>{% for r in plans %}{% set x = r.extra|fromjson %}
+        <tr><td>{{ x.doc_title }}{% if x.ocr %} <span class="conf c-inf" title="Read by OCR from a scanned page">OCR</span>{% endif %}</td>
+          <td class="small">{{ r.description[:160] }}</td><td class="num">{{ r.gross|inr or '—' }}</td><td>{{ r.payment_status or '—' }}</td>
+          <td>{{ r.link }}</td><td class="small"><a href="{{ r.source_url }}" target="_blank" rel="noopener">archived copy</a>{% if x.row %} · row {{ x.row }}{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+  </section>
+  {% endif %}
+
+  {% if bills %}
+  <section class="card">
+    <h2>Bills &amp; payments (BBMP)</h2>
+    <div class="scroll"><table class="grid">
+      <thead><tr><th>Bill type</th><th>Bill reg. (BR)</th><th>Work order</th><th class="num">Gross</th><th class="num">Nett</th><th>Payment</th><th>Payee</th><th>Source</th></tr></thead>
+      <tbody>{% for b in bills %}
+        <tr><td>{{ b.bill_type or '—' }}</td>
+          <td>{% if b.br_no %}{{ b.br_no }}{% if b.br_date %} · {{ b.br_date|dt }}{% endif %}{% else %}—{% endif %}</td>
+          <td>{% if b.wo_no or b.wo_date %}{{ b.wo_no or '' }} {{ b.wo_date|dt or '' }}{% else %}—{% endif %}</td>
+          <td class="num">{{ b.gross|inr_full or '—' }}</td><td class="num">{{ b.nett|inr_full or '—' }}</td>
+          <td>{% if b.payment_ref or b.payment_date %}{{ b.payment_ref or '' }} {{ b.payment_date|dt or '' }}{% elif b.payment_status %}{{ b.payment_status }}{% else %}—{% endif %}</td>
+          <td>{{ b.contractor or '—' }}</td>
+          <td class="small"><a href="{{ b.source_url }}" target="_blank" rel="noopener">{{ b.source_name }}</a> · row {{ b.source_row }}{% if b.dedupe_key == 'ROW' %} <span class="conf c-inf" title="Merged with copies in other registers by matching amounts">dedupe by amount</span>{% endif %}</td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    <p class="muted small">Original system: BBMP Works Bill Public View / IFMS (account.bbmpgov.in). Linked files are public exports of that data on OpenCity.</p>
+  </section>
+  {% endif %}
+
+  <section class="card small">
+    <h2>Why this is a {{ area }} project</h2>
+    <p>{{ p.scope_reason }}</p>
+  </section>
+</article>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ c.name }} — {{ site_name }}{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{{ url_for('signals_page') }}">← Signals &amp; contractors</a></p>
+<article class="detail">
+  <h1>{{ c.name }}</h1>
+  <div class="ids"><span class="mono">{{ c.entity }}</span>
+    <span>identity <span class="conf {{ 'c-ok' if c.basis == 'confirmed' else 'c-inf' }}">{{ c.basis }}</span></span>
+    <span>identifiers: <b class="mono">{{ (c.ids|fromjson)|join(', ') or 'none in the data' }}</b></span>
+    <span>seen in: {{ (c.systems|fromjson)|join(' + ') }}</span></div>
+  <section class="card small">
+    <h2>How the name variants were joined</h2>
+    {% set al = c.aliases|fromjson %}
+    <p>{% if al %}Also appears as: {{ al|join(' · ') }}{% else %}Single name variant.{% endif %}</p>
+    <ul>{% for e in c.evidence|fromjson %}<li>{{ e }}</li>{% endfor %}</ul>
+    <p class="muted">Joins on an official identifier (IFMS contractor code, KPPP supplierId or account display name) are confirmed. Joins on a shared mobile number or on names are inferred and listed above. Mobile numbers are used only while building and are never stored or shown.</p>
+  </section>
+  <section class="card">
+    <h2>Projects ({{ projects|length }}) · {{ c.amount|inr or '₹0' }} · {{ (c.share * 100)|round(1) }}% of Koramangala money in this dataset</h2>
+    <ul>{% for p in projects %}<li><a href="{{ url_for('project', slug=p.slug) }}">{{ p.title[:140] }}</a> <span class="muted small">{{ p.payments_gross|inr or p.contract_value|inr or '' }} · {{ p.last_activity|dt }}</span></li>{% endfor %}</ul>
+  </section>
+  {% if bids %}
+  <section class="card">
+    <h2>Bids on Koramangala KPPP tenders: {{ c.bids }} · won {{ c.wins }} · {{ c.single_wins }} as the only bidder</h2>
+    <div class="scroll"><table class="grid"><thead><tr><th>Tender</th><th>Rank</th><th class="num">Quoted</th><th>Bidders</th><th>Against</th></tr></thead><tbody>
+    {% for b in bids %}<tr><td><a href="{{ url_for('project', slug=b.slug) }}" class="mono">{{ b.tender }}</a></td><td>{{ b.rank }}</td><td class="num">{{ b.amount|inr_full }}</td><td class="num">{{ b.n }}</td><td class="small">{{ b.others|join(' · ') or '—' }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  {% endif %}
+  {% if cob %}
+  <section class="card small">
+    <h2>Frequent co-bidders</h2>
+    <ul>{% for r in cob %}<li>{{ r.a_name }} vs {{ r.b_name }}: {{ r.tenders }} tenders together ({{ r.a_name }} won {{ r.a_wins }}, {{ r.b_name }} won {{ r.b_wins }})</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</article>
+{% endblock %}

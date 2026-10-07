@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Investigation cases — {{ site_name }}{% endblock %}
+{% block content %}
+<h1>Investigation cases</h1>
+<p class="lede">{{ cases|length }} cases out of {{ reviewed|length }} reviewed. A case is retained only when its question survived an attempt to
+resolve it from the public documents, and only when the evidence is high or medium confidence. Each pack states what was promised, what happened,
+why it merits follow-up, the legitimate explanations, and the specific record that would settle it.</p>
+<p class="notice">These are investigation leads, not accusations. "No explaining approval was found in the public records examined" does not mean no approval exists.</p>
+{% for c in cases %}
+<article class="card case-card">
+  <h2><span class="muted">#{{ c.rank }}</span> <a href="{{ url_for('case_page', case_id=c.case_id) }}">{{ c.primary_title }}</a></h2>
+  <p class="small"><b>{{ c.title }}</b> · job <span class="mono">{{ c.job_number }}</span></p>
+  <dl class="pfacts">
+    <div><dt>Paid (gross)</dt><dd>{{ c.payments.gross_paid|inr or 'unknown' }}</dd></div>
+    <div><dt>Contract value</dt><dd>{{ c.contract.contract_value|inr or 'not read' }}</dd></div>
+    <div><dt>Confidence</dt><dd>{{ c.confidence }}</dd></div>
+    <div><dt>Status</dt><dd>{{ c.status }}</dd></div>
+  </dl>
+  <p>{{ c.primary_text }}</p>
+  <p class="small"><b>Core question:</b> {{ c.core_question }}</p>
+  <p class="small"><b>Next step:</b> {{ c.next_step }}</p>
+  <p class="small"><a href="{{ url_for('case_page', case_id=c.case_id) }}">Full evidence pack →</a>
+    {% if c.slug %} · <a href="{{ url_for('project', slug=c.slug) }}">project page</a>{% endif %}</p>
+</article>
+{% endfor %}
+
+<section class="card">
+  <h2>Reviewed and set aside</h2>
+  <p class="small muted">Signals that disappeared when better evidence was found. This list is as important as the cases above.</p>
+  <table class="grid"><thead><tr><th>Project</th><th>Outcome</th></tr></thead><tbody>
+  {% for c in reviewed if not c.retained %}
+    <tr><td class="small">{% if c.slug %}<a href="{{ url_for('project', slug=c.slug) }}">{{ c.job_number }}</a>{% else %}{{ c.job_number }}{% endif %} — {{ c.title[:80] }}</td>
+      <td class="small">{% for r in c.resolved_issues or [] %}<b>{{ r.type|replace('_', ' ') }}</b> ({{ r.outcome }}): {{ r.why }}{% if not loop.last %}<br>{% endif %}{% else %}{{ c.why_not_retained }}{% endfor %}</td></tr>
+  {% endfor %}
+  </tbody></table>
+</section>
+{% if summary and summary.weights %}
+<p class="small muted">Ranking uses a transparent score for prioritisation only: {% for k, v in summary.weights.items() %}{{ k|replace('_', ' ') }} (max {{ v }}){{ ', ' if not loop.last }}{% endfor %}. It never implies wrongdoing.</p>
+{% endif %}
+{% endblock %}

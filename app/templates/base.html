@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A source-linked reconstruction of public works in {{ area }}, {{ city }}, from public BBMP IFMS and KPPP records.">
+<title>{% block title %}{{ site_name }} — {{ area }}{% endblock %}</title>
+{% if config.STATIC %}<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+{% endif %}<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="{{ url_for('home') }}">{{ site_name }} <span class="brand-area">{{ area }}</span></a>
+    <nav aria-label="Main">
+      <a href="{{ url_for('index') }}">Projects</a>
+      <a href="{{ url_for('cases_page') }}">Cases</a>
+      <a href="{{ url_for('methodology') }}">Methodology</a>
+      <a href="{{ url_for('coverage') }}">Coverage &amp; limits</a>
+      <a href="{{ url_for('sources') }}">Sources</a>
+      <a href="{{ url_for('about') }}">About</a>
+      {% if repo_url %}<a href="{{ repo_url }}" rel="noopener">GitHub</a>{% endif %}
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+{% block content %}{% if error %}<p class="empty">{{ error }} <a href="{{ url_for('index') }}">Back to all projects</a></p>{% endif %}{% endblock %}
+</main>
+<footer class="wrap foot">
+  Reconstructed from public BBMP IFMS, BBMP tender and Karnataka Public Procurement Portal records. Every fact is marked
+  <span class="conf c-ok">confirmed</span> (in a source record), <span class="conf c-inf">inferred</span> (derived or matched, reasoning shown)
+  or <span class="conf c-unk">unknown</span>. Nothing is filled in.
+  <b>Signals and cases are observations for follow-up, not findings of wrongdoing.</b>
+  <a href="{{ url_for('coverage') }}">What this data cannot show</a>.
+</footer>
+</body>
+</html>

@@ -1,0 +1,28 @@
+# --- Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+*.log
+*.out
+.env
+.env.*
+
+# --- data: nothing raw, nothing unscrubbed, no working databases
+data/*
+!data/public/
+data/public/*
+!data/public/dataset/
+!data/public/dataset/**
+# the scrubbed public DB is committed: GitHub Pages builds the static site from it (.github/workflows/pages.yml)
+!data/public/koramangala_public.db
+data/public/*.tmp
+
+# --- static export (python -m app.freeze), built in CI
+site/
+
+# --- local agent/editor state
+.claude/
+.vscode/
+.idea/

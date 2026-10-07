@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Sources & method — {{ site_name }}{% endblock %}
+{% block content %}
+<article class="detail">
+<h1>Sources &amp; method</h1>
+<section class="card">
+  <h2>Where the data comes from</h2>
+  <ul>
+    <li><strong>BBMP Works Bill Public View / IFMS</strong> (account.bbmpgov.in): every bill registered and paid against a BBMP <em>job number</em>, with payee, amounts, bill type (running/final) and payment reference. We use the public exports on the <a href="https://data.opencity.in/" target="_blank" rel="noopener">OpenCity data portal</a> (2010–Mar 2026), because the BBMP portal is not reachable from outside India.</li>
+    <li><strong>Karnataka Public Procurement Portal (KPPP)</strong> (<a href="https://kppp.karnataka.gov.in/" target="_blank" rel="noopener">kppp.karnataka.gov.in</a>), 2023–26, read from the portal's public JSON endpoints:
+      <ul>
+        <li>tender notices</li>
+        <li>awarded bid and negotiated value</li>
+        <li><b>tender documents</b>, which give the stipulated period of completion</li>
+        <li><b>commercial comparative statements</b>, which give every bidder and their quoted total</li>
+      </ul></li>
+    <li><strong>BBMP tender lists 2013–2018</strong> (<a href="https://data.opencity.in/dataset/bbmp-tenders" target="_blank" rel="noopener">OpenCity: bbmp-tenders</a>): tender number, title, estimated value and dates for BBMP tenders of that period. Used to give older bill-only projects their estimate and tender history.</li>
+  </ul>
+</section>
+<section class="card">
+  <h2>The truth model</h2>
+  <ul class="small">
+    <li><span class="conf c-ok">confirmed</span>: copied, or summed exactly, from records that belong to the project through an exact identifier (BBMP job number, KPPP tender number).</li>
+    <li><span class="conf c-inf">inferred</span>: depends on interpretation or matching. Examples:
+      <ul>
+        <li>tender facts attached to bills by matching</li>
+        <li>"completed" read from a final bill</li>
+        <li>expected completion = award or work-order date + time allowed</li>
+        <li>place names read from text</li>
+        <li>totals that needed de-duplication by amount</li>
+      </ul>
+      The reasoning is shown next to each fact.</li>
+    <li><span class="conf c-unk">unknown</span>: no public source we found publishes it.</li>
+  </ul>
+</section>
+<section class="card">
+  <h2>Connecting tenders to bills</h2>
+  <p class="small">Tenders and bills share no identifier. Each tender is scored against each BBMP job on these pieces of evidence:</p>
+  <ul class="small">
+    <li>description similarity (TF-IDF and sequence ratio, on content words only)</li>
+    <li>same kind of work (road, drain, water, park…)</li>
+    <li>same places (block, main/cross, locality)</li>
+    <li>ward numbers across the three ward maps</li>
+    <li>awarded bidder among the payees</li>
+    <li>bills starting after the tender</li>
+    <li>amount paid against the tender value</li>
+    <li>same engineering division</li>
+  </ul>
+  <p class="small">Links can be <b>high</b> or <b>medium</b> confidence. Each tender links to at most one job, and each job to at most one tender. Weaker candidates are shown on the project page as "possible" and never merged. Accepted links, their evidence and their contradictions are all shown.</p>
+  {% if stats %}<p class="muted small">Last build: {{ stats.parsed }} bill rows → {{ stats.after_dedupe }} unique Koramangala bills; {{ stats.kppp_groups }} KPPP and {{ stats.oc_groups }} 2013–18 tender groups (public works); links: {{ stats.get('linked_KPPP_high', 0) }} KPPP high, {{ stats.get('linked_OC-TENDERS_high', 0) }} + {{ stats.get('linked_OC-TENDERS_medium', 0) }} 2013–18 high/medium; {{ stats.projects }} projects shown, {{ stats.bills_and_tender }} with both tender and bills.</p>{% endif %}
+</section>
+<section class="card">
+  <h2>Files used</h2>
+  <div class="scroll"><table class="grid">
+    <thead><tr><th>ID</th><th>Source</th><th class="num">Records used</th><th class="num">Projects</th><th>Links</th></tr></thead>
+    <tbody>{% for s in sources %}
+      <tr><td class="mono">{{ s.id }}</td><td>{{ s.name }}<br><span class="muted small">{{ s.publisher }}</span></td>
+        <td class="num">{{ s.n_records }}</td><td class="num">{{ s.n_projects }}</td>
+        <td class="small"><a href="{{ s.download_url }}" target="_blank" rel="noopener">data</a> · <a href="{{ s.dataset_page }}" target="_blank" rel="noopener">dataset page</a> · <a href="{{ s.original_portal }}" target="_blank" rel="noopener">original portal</a></td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</section>
+</article>
+{% endblock %}

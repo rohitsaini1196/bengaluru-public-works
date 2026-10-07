@@ -1,0 +1,7 @@
+# Only the web app, its config and the public database go into the image.
+*
+!app/
+!deploy/gunicorn.conf.py
+!requirements-web.txt
+!data/public/koramangala_public.db
+app/**/__pycache__

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}About — {{ site_name }}{% endblock %}
+{% block content %}
+<article class="prose">
+<h1>About</h1>
+<p>This is an independent, non-partisan reconstruction of public works in {{ area }}, {{ city }}, built only from public government records.
+It aims to make the life of each project (planned, contracted, paid, documented, completed) visible and checkable by anyone.</p>
+<p>It is not an audit and makes no finding of wrongdoing. Signals and cases are leads for follow-up; many earlier signals were resolved when
+better documents were read, and that is shown on the <a href="{{ url_for('cases_page') }}">cases page</a>.</p>
+<h2>Using this data</h2>
+<ul>
+  <li>Every fact links to its source. Please verify against the source before quoting.</li>
+  <li>Quote confidence labels with the fact: an <i>inferred</i> value is not a confirmed one.</li>
+  <li>Projects can be downloaded as JSON from <a href="{{ api_href('api_projects') }}">/api/projects</a>; cases from <a href="{{ api_href('api_cases') }}">/api/cases</a>.</li>
+</ul>
+<h2>Corrections and contact</h2>
+<p>If a fact is wrong, or a document explains an open question, please report it{% if repo_url %} as an issue on <a href="{{ repo_url }}" rel="noopener">the repository</a>{% endif %}{% if contact %} or write to {{ contact }}{% endif %}.
+Corrections that resolve a case are welcome and will be reflected in the data.</p>
+</article>
+{% endblock %}

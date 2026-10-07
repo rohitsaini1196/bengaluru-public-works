@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Projects — {{ site_name }}{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Projects</h1>
+  <p class="lede">{{ total.n }} road, drain, footpath and civic projects, each reconstructed from tenders and BBMP bills: what was planned, who got the work, what was paid and what happened. Every claim links to its source and is marked confirmed, inferred or unknown.</p>
+  <div class="kpis">
+    <div class="kpi"><span class="kpi-v">{{ total.paid|inr }}</span><span class="kpi-l">paid (gross) on {{ total.n_paid }} projects with bills</span></div>
+    <div class="kpi"><span class="kpi-v">{{ total.linked }}</span><span class="kpi-l">projects with both tender and bills (lifecycle reconstructed)</span></div>
+    <div class="kpi"><span class="kpi-v">{{ total.full }}</span><span class="kpi-l">with evidence for all 6 stages</span></div>
+    <div class="kpi"><span class="kpi-v">{{ total.flagged }}</span><span class="kpi-l">with a notice-level <a href="{{ url_for('signals_page') }}">signal</a></span></div>
+  </div>
+</section>
+
+<form class="search" id="explorer" method="get" action="{{ url_for('index') }}">
+  <input type="search" name="q" value="{{ args.q }}" placeholder="Search work, road, block, contractor, job or tender no." aria-label="Search projects">
+  <select name="category" aria-label="Category"><option value="">All categories</option>
+    {% for f in facets.category %}<option value="{{ f[0] }}" {{ 'selected' if args.category == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select>
+  <select name="status" aria-label="Status"><option value="">All statuses</option>
+    {% for f in facets.status %}<option value="{{ f[0] }}" {{ 'selected' if args.status == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select>
+  <select name="signal" aria-label="Signal"><option value="">Any / no signal</option>
+    {% for f in facets.signal %}<option value="{{ f[0] }}" {{ 'selected' if args.signal == f[0] }}>{{ SIGNAL_NAMES.get(f[0], f[0]) }} ({{ f[1] }})</option>{% endfor %}</select>
+  <select name="depth" aria-label="Lifecycle evidence"><option value="">Any lifecycle evidence</option>
+    {% for n in [6,5,4,3] %}<option value="{{ n }}" {{ 'selected' if args.depth == n|string }}>{{ n }}+ of 6 stages</option>{% endfor %}</select>
+  <select name="dept" aria-label="Department"><option value="">All departments</option>
+    {% for f in facets.dept %}<option value="{{ f[0] }}" {{ 'selected' if args.dept == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select>
+  <select name="sort" aria-label="Sort">
+    {% for k, l in [('recent','Most recent activity'),('depth','Most complete story'),('signals','Most signals'),('value','Largest value'),('paid','Most paid'),('oldest','Oldest first')] %}
+    <option value="{{ k }}" {{ 'selected' if sort == k }}>{{ l }}</option>{% endfor %}</select>
+  <fieldset class="flags"><legend class="small muted">Has:</legend>
+    {% for k, label in FLAGS.items() %}<label class="small"><input type="checkbox" name="has" value="{{ k }}" {{ 'checked' if k in flags }}> {{ label }}</label>{% endfor %}
+  </fieldset>
+  <button type="submit">Search</button>
+  {% if config.STATIC or args.values()|select|list or flags %}<a class="reset" href="{{ url_for('index') }}">Clear</a>{% endif %}
+</form>
+
+<p class="count" id="count">{{ summary.n }} project{{ '' if summary.n == 1 else 's' }}{% if summary.n != total.n %} · {{ summary.paid|inr or '₹0' }} paid · {{ summary.contract|inr or '₹0' }} awarded{% endif %}</p>
+
+<p class="empty" id="empty" {{ 'hidden' if rows }}>No projects match. Try a road name, block (“6th block”), contractor or job number.</p>
+<ol class="plist">
+{% for r in rows %}{% set st = r.stages|fromjson or {} %}
+  <li class="pcard" data-search="{{ r.search_text }}" data-category="{{ r.category or '' }}" data-status="{{ r.status or '' }}"
+      data-dept="{{ r.department or '' }}" data-depth="{{ r.lifecycle or 0 }}" data-link="{{ r.link_confidence or '' }}"
+      data-signals=" {{ (codes.get(r.id) or [])|join(' ') }} " data-flags=" {{ (pflags.get(r.id) or [])|join(' ') }} "
+      data-recent="{{ r.last_activity or '' }}" data-oldest="{{ r.first_date or r.tender_published or '9999' }}"
+      data-paid="{{ r.payments_gross or 0 }}" data-value="{{ [r.payments_gross or 0, r.contract_value or 0, r.estimated_cost or 0]|max }}"
+      data-siglevel="{{ {'attention': 3, 'notice': 2, 'info': 1}.get(r.signal_level, 0) }}" data-nsig="{{ r.n_signals or 0 }}">
+    <a class="ptitle" href="{{ url_for('project', slug=r.slug) }}">{{ r.title }}</a>
+    <div class="pmeta">
+      <span class="badge {{ status_class(r.status) }}">{{ r.status or 'Status unknown' }}</span>
+      <span class="tag">{{ r.category }}</span>
+      <span class="lc" title="Lifecycle: planned · contracted · work documented · paid · completion · physical evidence">{% for s in ['planned','awarded','work','money','outcome','evidence'] %}<i class="dot {{ 'on' if st.get(s) }}"></i>{% endfor %}</span>
+      {% if r.link_confidence in ('high','medium') %}<span class="chip inf">tender↔bills: {{ r.link_confidence }}</span>{% endif %}
+      {% for s in sigs.get(r.id, [])[:3] %}<span class="chip sev-{{ s.severity }}" title="{{ s.title }}">{{ SIGNAL_NAMES.get(s.code, s.code) }}</span>{% endfor %}
+      {% if r.id in cases_by_proj %}<a class="chip case" href="{{ url_for('case_page', case_id=cases_by_proj[r.id]) }}">investigation case</a>{% endif %}
+      {% if r.job_numbers %}<span class="mono muted">Job {{ r.job_numbers }}</span>{% endif %}
+      {% if r.tender_numbers %}<span class="mono muted">{{ r.tender_numbers.split(',')[0] }}{% if ',' in r.tender_numbers %} +{{ r.tender_numbers.count(',') }}{% endif %}</span>{% endif %}
+    </div>
+    <dl class="pfacts">
+      <div><dt>Estimate</dt><dd>{{ r.estimated_cost|inr or '<span class="unk">Unknown</span>'|safe }}</dd></div>
+      <div><dt>Contract</dt><dd>{{ r.contract_value|inr or '<span class="unk">Unknown</span>'|safe }}</dd></div>
+      <div><dt>Paid</dt><dd>{{ r.payments_gross|inr or '<span class="unk">Unknown</span>'|safe }}</dd></div>
+      <div><dt>Contractor</dt><dd>{{ r.contractor or '<span class="unk">Unknown</span>'|safe }}</dd></div>
+      <div><dt>Where</dt><dd>{% if r.location %}{{ r.location }}{% elif r.wards %}Ward {{ r.wards }}{% else %}<span class="unk">Unknown</span>{% endif %}</dd></div>
+      <div><dt>Last activity</dt><dd>{{ r.last_activity|dt or '<span class="unk">Unknown</span>'|safe }}</dd></div>
+    </dl>
+  </li>
+{% endfor %}
+</ol>
+{% if pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% set q = request.args.to_dict(flat=False) %}
+  {% if page > 1 %}<a href="{{ url_for('index', **dict(q, page=[page - 1])) }}">← Previous</a>{% endif %}
+  <span class="muted small">Page {{ page }} of {{ pages }}</span>
+  {% if page < pages %}<a href="{{ url_for('index', **dict(q, page=[page + 1])) }}">Next →</a>{% endif %}
+</nav>
+{% endif %}
+{% if config.STATIC %}<script src="{{ url_for('static', filename='explorer.js') }}" defer></script>{% endif %}
+{% endblock %}

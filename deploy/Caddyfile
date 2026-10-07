@@ -1,0 +1,42 @@
+# Automatic HTTPS (Let's Encrypt) for $DOMAIN; HTTP redirects to HTTPS.
+{
+	email {$ACME_EMAIL}
+	servers {
+		timeouts {
+			read_body 10s
+			read_header 10s
+			write 30s
+			idle 2m
+		}
+	}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 16KB
+	}
+	header {
+		-Server
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	}
+	# only GET/HEAD reach the app; everything else is refused at the edge as well
+	@write not method GET HEAD
+	respond @write "This site is read-only." 405
+	reverse_proxy web:8000 {
+		header_up X-Forwarded-For {remote_host}
+	}
+	log {
+		output stdout
+		format filter {
+			wrap console
+			fields {
+				request>headers delete
+				request>remote_ip ip_mask {
+					ipv4 24
+					ipv6 48
+				}
+			}
+		}
+	}
+}

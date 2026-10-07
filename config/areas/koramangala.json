@@ -1,0 +1,23 @@
+{
+  "area_name": "Koramangala",
+  "slug": "koramangala",
+  "city": "Bengaluru",
+  "locality_regex": "\\bk[o0]ra?ma?na?g(?:a?l+a?|a)\\b|k[o0]?ra?mangala|kormangala|\\bNGV\\b|national games? vill",
+  "exclude_regex": "k[o0]?ra?mangala\\s*(\\(?\\s*k\\s*-?\\s*100\\s*\\)?\\s*)?(valley|vally)|\\bk[- ]?100\\b|k[o0]?ra?mangala\\s*(and|&)\\s*chall?a\\w*\\s*(valley|vally)",
+  "exclude_note": "'Koramangala Valley' / K-100 is a city-wide storm-water system, not the locality",
+  "not_city_regex": "devanahalli|hassan|ramanagar|magadi|vijayapura|bengaluru rural|bangalore rural|grama panchayat|\\bGP\\b|channarayapatna|jalasur|heragu|halasabele|chakrabavi|chakrabhavi|kalabyrappanapalya|lakkenahalli|open air jail",
+  "not_city_note": "villages and gram panchayats named Koramangala outside Bengaluru",
+  "ward_maps": {"198": ["151"], "225": ["174"], "243": ["186"]},
+  "ward_maps_note": "Koramangala's ward number under each delimitation (198-ward map to FY 2022-23, 243-ward map FY 2023-24, 225-ward map from FY 2024-25)",
+  "ward_equivalents": [["151", "174", "186"], ["148", "173"], ["147", "176"], ["173", "175"]],
+  "sub_localities": [
+    "(?:\\d+(?:st|nd|rd|th)\\s*[a-z]?\\s*)?block,?\\s*k[o0]?ra?mangala", "k[o0]?ra?mangala\\s*\\d+(?:st|nd|rd|th)?\\s*[a-z]?\\s*block",
+    "\\d+(?:st|nd|rd|th)\\s*[a-d]?\\s*block", "\\d+\\s*(?:feet|ft\\.?)\\s*(?:ring\\s*)?road", "\\d+(?:st|nd|rd|th)\\s+(?:[a-z]\\s+)?(?:main|cross)(?:\\s+road)?",
+    "jakkasandra(?: extension| layout| block)?|ejipura|adugodi|venkatapura|rajendra ?nagar\\w*|mestripalya|kathalipalya|st\\.? ?john'?s?|s ?t bed|national games? village|ngv|inner ring road|sarjapura? road|hosur road|maharaja (?:hotel )?signal|sony (?:world )?signal|forum mall|wipro signal|tavarekere|krupanidhi|madiwala|koramangala industrial (?:area|layout)|lakkasandra|a\\.? ?k\\.? colony|kuduremukha colony|ews"
+  ],
+  "kppp_keywords": ["koramangala", "kormangala"],
+  "known_divisions": ["BTM Layout Division", "Road Infrastructure South", "Projects Central (corridor)"],
+  "payments_from": "2015-04-01",
+  "verified": true,
+  "source_of_ward_numbers": "BBMP ward lists for the 198/225/243-ward delimitations; confirmed against bill descriptions in Phases 1-5"
+}

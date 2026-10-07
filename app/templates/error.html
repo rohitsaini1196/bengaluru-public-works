@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — {{ site_name }}{% endblock %}
+{% block content %}
+<h1>{{ code }}</h1>
+<p class="lede">{{ message }}</p>
+<p><a href="{{ url_for('home') }}">Home</a> · <a href="{{ url_for('index') }}">All projects</a></p>
+{% endblock %}

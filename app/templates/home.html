@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>{{ site_name }}</h1>
+  <p class="area-line">{{ area }}, {{ city }}</p>
+  <p class="lede">A source-linked reconstruction of public works in {{ area }}, {{ city }}: what was promised, who received the work,
+  what was paid, what documents say was completed, and where questions remain. Reconstructed from public BBMP IFMS and KPPP records.</p>
+  <p class="notice">Signals are observations for follow-up, not findings of wrongdoing. A signal can disappear when better evidence is found, and many have.</p>
+  <div class="kpis">
+    <div class="kpi"><span class="kpi-v">{{ h.projects }}</span><span class="kpi-l">projects reconstructed ({{ h.with_bills }} with BBMP bills)</span></div>
+    <div class="kpi"><span class="kpi-v">{{ h.paid_bills }}</span><span class="kpi-l">paid bills · {{ h.paid_total|inr }} gross</span></div>
+    <div class="kpi"><span class="kpi-v">{{ h.cases }}</span><span class="kpi-l">investigation-ready cases, from {{ h.reviewed }} reviewed</span></div>
+    <div class="kpi"><span class="kpi-v">{{ (h.first or '')[:4] }}–{{ (h.last or '')[:4] }}</span><span class="kpi-l">payments covered · {{ h.sources }} source files</span></div>
+  </div>
+</section>
+
+<div class="cards">
+  <a class="card nav-card" href="{{ url_for('index') }}"><h2>Explore projects</h2><p>Search by road, block, contractor or job number. Every figure links to its source.</p></a>
+  <a class="card nav-card" href="{{ url_for('cases_page') }}"><h2>Investigation cases</h2><p>{{ h.cases }} cases where a question survived document review, each with an evidence pack and specific RTI requests.</p></a>
+  <a class="card nav-card" href="{{ url_for('methodology') }}"><h2>Methodology</h2><p>Sources, discovery, how records are linked, how quantities are read and checked, how signals are reviewed.</p></a>
+  <a class="card nav-card" href="{{ url_for('coverage') }}"><h2>Coverage &amp; limitations</h2><p>What the public record can and cannot establish, stated plainly.</p></a>
+</div>
+
+{% if cases %}
+<section class="card">
+  <h2>Open questions</h2>
+  <ol class="caselist">
+  {% for c in cases %}
+    <li><a href="{{ url_for('case_page', case_id=c.case_id) }}"><b>{{ c.primary_title }}</b></a> — {{ c.title[:110] }}
+      <span class="muted small">· job {{ c.job_number }} · {{ c.confidence }} confidence · {{ c.status }}</span></li>
+  {% endfor %}
+  </ol>
+</section>
+{% endif %}
+{% if h.published_at %}<p class="muted small">Data published {{ h.published_at[:10] }}.</p>{% endif %}
+{% endblock %}

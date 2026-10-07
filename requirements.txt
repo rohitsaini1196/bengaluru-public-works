@@ -1,0 +1,7 @@
+# Pipeline + tests (python -m ingest.*, pytest). The public web app needs only requirements-web.txt.
+flask>=3.1,<4
+openpyxl>=3.1,<4   # KPPP comparative statements (xlsx)
+pypdf>=6,<7        # PDF text layers and embedded page images
+pillow>=12,<13     # OCR preprocessing (tesseract is a system dependency: brew/apt install tesseract)
+certifi>=2026.1    # TLS roots (+ the GoDaddy intermediate in ingest/certs/) for accounts.bbmp.gov.in
+pytest>=9,<10

@@ -1,0 +1,17 @@
+{
+  "area_name": "HSR Layout",
+  "slug": "hsr_layout",
+  "city": "Bengaluru",
+  "locality_regex": "\\bh\\.?\\s*s\\.?\\s*r\\.?\\s*(?:layout|lay\\s*out)\\b|\\bhsr\\b|hosur\\s*sarjapura?\\s*road\\s*layout",
+  "exclude_regex": null,
+  "not_city_regex": "bengaluru rural|bangalore rural|grama panchayat|\\bGP\\b",
+  "ward_maps": {"198": ["174"], "225": ["221"]},
+  "ward_maps_note": "DEMO, NOT VERIFIED: derived from the most frequent job-code ward prefix of grid rows whose description names HSR Layout (198-map: 174, 309 rows; 225-map: 221, 23 rows). The 243-ward map was ambiguous (174: 16 rows, 151: 9) and is left out. Verify against the delimitation notification before use.",
+  "ward_equivalents": [["174", "221"]],
+  "sub_localities": ["(?:\\d+(?:st|nd|rd|th)\\s*)?sector,?\\s*hsr|hsr\\s*(?:layout\\s*)?\\d+(?:st|nd|rd|th)?\\s*sector", "agara|somasundarapalya|parangipalya|mangammanapalya|27th main|outer ring road"],
+  "kppp_keywords": ["hsr layout", "h.s.r layout"],
+  "known_divisions": [],
+  "payments_from": "2015-04-01",
+  "verified": false,
+  "source_of_ward_numbers": "derived from the cached BBMP payment grid (no new collection); demonstration only"
+}

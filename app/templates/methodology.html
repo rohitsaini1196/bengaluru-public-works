@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Methodology — {{ site_name }}{% endblock %}
+{% block content %}
+<article class="prose">
+<h1>Methodology</h1>
+<p class="lede">How {{ h.projects }} projects were reconstructed from public records, and how every claim stays traceable to its source.</p>
+
+<h2>1. Public sources</h2>
+<ul>
+  <li><b>BBMP IFMS works-bill service</b> (accounts.bbmp.gov.in/vssWB): public, no login. Bill details, deductions, approval steps and the
+    attachment lists of each work bill, plus the city-wide payment grid. Attachments (work orders, agreements, Schedule B, bill forms,
+    work slips, completion certificates, extension-of-time orders) are fetched from their public URLs.</li>
+  <li><b>Karnataka Public Procurement Portal (KPPP)</b>: tenders that mention {{ area }}, award values, bidders, comparative statements and tender documents.</li>
+  <li><b>OpenCity</b> mirrors of BBMP bill registers and 2013–18 tender lists; archived BBMP documents on the <b>Wayback Machine</b>.</li>
+</ul>
+<p>Collection was rate-limited (about one request per second) and cached. Contractor phone numbers and e-mail addresses were removed before anything was stored.
+No login, CAPTCHA or access control was bypassed: where a view required a session, collection stopped. See <a href="{{ url_for('sources') }}">every source file</a>.</p>
+
+<h2>2. Discovery</h2>
+<p>BBMP's public payment grid lists every RTGS-paid work bill in the city since mid-2015
+{% if cov and cov.denominator %}({{ '{:,}'.format(cov.denominator.grid_bills_all_wards) }} bills){% endif %}. Each row is tested with the same scope rules:
+the work description names {{ area }} (including common misspellings and sub-localities), or the job number carries {{ area }}'s ward prefix
+for the ward map in force when the job was created, unless the description names another locality. Job numbers repeat across ward maps,
+so bills whose description belongs to another area are set aside.</p>
+
+<h2>3. Entity resolution</h2>
+<p>Bills are grouped into a project by BBMP job number. Tenders are linked to jobs by scored matching (description, place, ward, work type, dates,
+contractor), never by a shared number, because none exists. Every link records its supporting and conflicting evidence and its confidence.
+Contractor name variants are merged only on strong evidence (registration codes, identical names after normalisation, shared contact details used in memory only).</p>
+
+<h2>4. Truth and provenance</h2>
+<p>Every fact is <span class="conf c-ok">confirmed</span> (read directly from a source record), <span class="conf c-inf">inferred</span>
+(derived, matched or read by OCR; the reasoning is shown) or <span class="conf c-unk">unknown</span> (no public source publishes it).
+Facts never overwrite stronger sources: an IFMS value outranks a typed attachment, which outranks a scanned one read by OCR.</p>
+
+<h2>5. Quantity extraction</h2>
+<p>Schedule B, estimates, bill forms and work slips are read with the native PDF text layer where present, otherwise by OCR, with
+orientation detection and table-ruling removal. A line item is accepted only if <b>quantity × rate = amount</b> on the printed row.
+Work-slip rows carry two more checks: executed quantity × rate = actual amount, and tender − actual = savings or excess.
+Handwritten measurement books are never read as numbers.</p>
+
+<h2>6. Signals</h2>
+<p>Rules flag patterns worth a second look: payments far above a contract, work past its completion date with no final bill,
+quantities above or below the tendered quantity, identical documents on different jobs, placeholder files, fines. Each signal states its threshold, its evidence and
+benign explanations. A signal is an observation, not a finding.</p>
+
+<h2>7. Investigation case review</h2>
+<p>Before a signal becomes a case, the system tries to <b>resolve</b> it from the public documents: it fetches variation documents, work slips, final bill forms,
+work orders and extension-of-time orders, and reconciles them item by item. Each issue ends up explained, an artefact, partially explained,
+insufficient evidence, or unexplained in the public records examined. Only high- and medium-confidence open questions become cases
+{% if summary %}({{ summary.retained }} of {{ summary.reviewed }} reviewed){% endif %}.</p>
+
+<h2>8. A signal can disappear when better evidence is found</h2>
+<p>This is the most important rule. In the case review, most of the strongest earlier signals did not survive. Examples:</p>
+<ul>
+  <li>Gym equipment "billed at twice the tendered quantity, with no variation document": an approved work slip was attached under the name "WS" and records the increase.</li>
+  <li>A park "paid 220% of its contract": two contracts under one job; the first work order was scanned upside down.</li>
+  <li>The "same agreement on two jobs": one package contract of 13 works, booked under two job codes; combined payments are 99.8% of it.</li>
+  <li>Quantities "identical to Schedule B": running-bill snapshots; the final comparative statement records different quantities.</li>
+  <li>"Final bill without a measurement book": for bills from mid-2024, IFMS does not show bill-level attachments without a login, so absence proves nothing.</li>
+</ul>
+<p>See <a href="{{ url_for('cases_page') }}">the cases page</a> for the full list of set-aside signals and why.</p>
+</article>
+{% endblock %}

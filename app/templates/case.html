@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ c.case_id }} — {{ c.primary_title or 'Case' }}{% endblock %}
+{% macro evline(e) -%}
+<li><a href="{{ e.url }}" rel="noopener" class="src">{{ e.label or 'source' }}</a>{% if e.page %} · p.{{ e.page }}{% endif %}
+  · {{ e.kind }}{% if e.method %} · {{ e.method }}{% endif %} · confidence {{ e.confidence or 'n/a' }}{% if e.cross_validated %}, cross-validated{% endif %}
+  {% if e.raw %}<details class="ocr"><summary>printed / OCR text</summary><code>{{ e.raw }}</code></details>{% endif %}</li>
+{%- endmacro %}
+{% block content %}
+<p class="crumb"><a href="{{ url_for('cases_page') }}">← All cases</a></p>
+<article class="detail">
+  <h1>{{ c.primary_title or 'Reviewed project' }}</h1>
+  <div class="pmeta"><span class="mono">{{ c.case_id }}</span> · <span class="chip">{{ c.status }}</span> · confidence <b>{{ c.confidence or 'n/a' }}</b>
+    {% if c.case_score %} · priority score {{ c.case_score }}/100 <span class="muted">(ranking aid, not a judgement)</span>{% endif %}</div>
+  {% if not c.retained %}<p class="notice">This project was reviewed and set aside: {{ c.why_not_retained }}</p>{% endif %}
+
+  <section class="card"><h2>Project</h2>
+    <p><b>{{ c.title }}</b></p>
+    <p class="small">Job <span class="mono">{{ c.job_number }}</span> · {{ c.project_summary.category or '' }} · {{ c.project_summary.location or 'location not stated' }}
+      · {{ c.project_summary.agency or 'BBMP' }}</p>
+    <p class="small">Contractor: {{ c.project_summary.contractor or 'unknown' }}{% if c.project_summary.payees and c.project_summary.payees|length > 1 %} · paid to, per IFMS bills:
+      {% for x in c.project_summary.payees %}{{ x.contractor }} {{ x.gross|inr }} ({{ x.first }} → {{ x.last }}){{ '; ' if not loop.last }}{% endfor %}{% endif %}</p>
+    {% if c.slug %}<p class="small"><a href="{{ url_for('project', slug=c.slug) }}">Project page with every fact and source →</a></p>{% endif %}
+  </section>
+
+  <div class="two">
+  <section class="card"><h2>What was promised</h2>
+    <dl class="pfacts">
+      <div><dt>Contract / work-order value</dt><dd>{{ c.contract.contract_value|inr or 'not read' }}{% if c.contract.contract_value_confidence %} ({{ c.contract.contract_value_confidence }}){% endif %}</dd></div>
+      <div><dt>Estimate</dt><dd>{{ c.contract.estimated_cost|inr or '—' }}</dd></div>
+      <div><dt>Work order</dt><dd>{{ c.contract.work_order_ref or '—' }}</dd></div>
+      <div><dt>Stipulated completion</dt><dd>{{ c.contract.stipulated_completion|dt or '—' }}</dd></div>
+    </dl>
+  </section>
+  <section class="card"><h2>What happened</h2>
+    <dl class="pfacts">
+      <div><dt>Paid (gross / net)</dt><dd>{{ c.payments.gross_paid|inr or '—' }} / {{ c.payments.net_paid|inr or '—' }}</dd></div>
+      <div><dt>Bills</dt><dd>{{ c.payments.n_bills or '—' }} · {{ c.payments.first_payment|dt or '?' }} → {{ c.payments.last_payment|dt or '?' }}</dd></div>
+      <div><dt>Final bill</dt><dd>{{ c.execution.final_bill|dt or 'none recorded' }}</dd></div>
+      <div><dt>Status</dt><dd>{{ c.execution.status or '—' }}</dd></div>
+      {% if c.execution.time_extensions %}<div><dt>Extensions of time</dt><dd>{{ c.execution.time_extensions }}</dd></div>{% endif %}
+      {% if c.payments.pending_bills %}<div><dt>Pending bills</dt><dd>{{ c.payments.pending_bills }}</dd></div>{% endif %}
+      {% if c.payments.deductions %}<div><dt>Deductions</dt><dd>{{ c.payments.deductions }}</dd></div>{% endif %}
+    </dl>
+  </section>
+  </div>
+
+  <section class="card"><h2>Why this case deserves follow-up</h2>
+    {% for i in c.issues if i.live %}<p><b>{{ i.title }}</b> <span class="muted small">({{ i.status|replace('_', ' ') }}, {{ i.confidence }} confidence)</span><br>{{ i.text }}</p>{% endfor %}
+    {% if c.resolved_issues %}<p class="small muted"><b>Examined and set aside on this project:</b></p>
+      <ul class="small muted">{% for r in c.resolved_issues %}<li>{{ r.type|replace('_', ' ') }} ({{ r.outcome }}): {{ r.why }}</li>{% endfor %}</ul>{% endif %}
+  </section>
+
+  {% if c.explanations %}
+  <div class="two">
+    <section class="card"><h2>Possible legitimate explanations</h2><ul>{% for e in c.explanations %}<li>{{ e }}</li>{% endfor %}</ul></section>
+    <section class="card"><h2>What would resolve it</h2><ul>{% for e in c.resolves %}<li>{{ e }}</li>{% endfor %}</ul></section>
+  </div>
+  <section class="card"><h2>Questions an investigator could ask</h2><ol>{% for qn in c.questions %}<li>{{ qn }}</li>{% endfor %}</ol></section>
+  {% if c.rti %}<section class="card"><h2>Specific records to request (RTI)</h2><ol>{% for r in c.rti %}<li><b>{{ r.record }}</b> — job {{ r.job }}{% if r.detail %}; {{ r.detail }}{% endif %}. <i>Why:</i> {{ r.why }}</li>{% endfor %}</ol></section>{% endif %}
+  {% endif %}
+
+  <section class="card"><h2>Evidence</h2>
+    <ul class="evidence">{% for i in c.issues if i.live %}{% for e in i.evidence %}{{ evline(e) }}{% endfor %}{% endfor %}</ul>
+    {% if c.source_links and c.source_links.ifms_bills %}<p class="small muted">IFMS work bills for this job: {{ c.source_links.ifms_bills[:20]|join(', ') }}</p>{% endif %}
+  </section>
+  <p class="small muted">Investigation lead, not an accusation. Every statement on this page is generated from the published case data (<a href="{{ api_href('api_cases') }}">JSON</a>).</p>
+</article>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Signals — {{ site_name }}{% endblock %}
+{% block content %}
+<article class="detail">
+<h1>Signals</h1>
+<p class="lede">Patterns in the public record that are worth a closer look. A signal is <b>not</b> a finding of wrongdoing. Most have ordinary explanations: re-tendering, variations, annual maintenance contracts, late bill settlement. Each one states how it was computed, and whether it rests on <span class="conf c-ok">confirmed</span> or <span class="conf c-inf">inferred</span> facts.</p>
+
+{% for code, rows in by_code.items() %}
+<section class="card">
+  <h2>{{ SIGNAL_NAMES.get(code, code) }} <span class="muted small">· {{ rows|length }} project{{ 's' if rows|length != 1 }}</span></h2>
+  <ul class="slist">
+  {% for s in rows %}
+    <li class="sig sev-{{ s.severity }}"><span class="sev">{{ s.severity }}</span>
+      <b>{{ s.title }}</b> <span class="conf {{ 'c-ok' if s.confidence == 'confirmed' else 'c-inf' }}">{{ s.confidence }}</span>
+      <div class="small"><a href="{{ url_for('project', slug=s.slug) }}">{{ s.project_title[:140] }}</a></div>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+
+<section class="card">
+  <h2>Contractors (resolved entities)</h2>
+  <p class="small muted">Share of money in this dataset: paid (gross) where bills exist, otherwise the awarded contract value. Identity is <span class="conf c-ok">confirmed</span> only when every name variant was joined on an official identifier.</p>
+  <div class="scroll"><table class="grid">
+    <thead><tr><th>Contractor</th><th>Identity</th><th class="num">Projects</th><th class="num">Amount</th><th class="num">Share</th><th class="num">Bids / wins / sole-bid wins</th><th>Identifiers</th></tr></thead>
+    <tbody>{% for c in contractors %}
+      <tr><td><a href="{{ url_for('contractor', entity=c.entity) }}">{{ c.name }}</a></td><td><span class="conf {{ 'c-ok' if c.basis == 'confirmed' else 'c-inf' }}">{{ c.basis }}</span></td>
+        <td class="num">{{ c.projects }}</td><td class="num">{{ c.amount|inr or '—' }}</td><td class="num">{{ (c.share * 100)|round(1) }}%</td>
+        <td class="num">{{ c.bids }} / {{ c.wins }} / {{ c.single_wins }}</td><td class="small mono">{{ (c.ids|fromjson)|join(', ') }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</section>
+{% if co_bidding %}
+<section class="card small">
+  <h2>Bidders who keep meeting (3+ {{ area }} tenders together)</h2>
+  <ul>{% for r in co_bidding %}<li><a href="{{ url_for('contractor', entity=r.a_entity) }}">{{ r.a_name }}</a> and <a href="{{ url_for('contractor', entity=r.b_entity) }}">{{ r.b_name }}</a>: {{ r.tenders }} tenders ({{ r.a_wins }} – {{ r.b_wins }} wins)</li>{% endfor %}</ul>
+</section>
+{% endif %}
+</article>
+{% endblock %}
