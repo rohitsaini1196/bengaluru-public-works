@@ -71,8 +71,8 @@ def main(force=False):
     (OUT / "search.json").write_text(json.dumps(list(found.values()), indent=1))
     for nit in found:
         dest = OUT / f"{nit}.json"
-        if dest.exists() and not force:
-            continue
+        if dest.exists() and not force and json.loads(dest.read_text()).get("selected_bid"):
+            continue                 # awarded tenders do not change; tenders still in evaluation are re-checked
         full, _ = _req(f"{KPPP_API}/{nit}/works-tender-full-view")
         bid, _ = _req(f"{KPPP_API}/bids/{nit}/tender-category/WORKS/get-selected-bid-for-lumpsum")
         files, _ = _req(f"{KPPP_API}/{nit}/get-works-tender-files")

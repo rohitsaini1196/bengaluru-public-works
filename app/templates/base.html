@@ -30,6 +30,7 @@
   Reconstructed from public BBMP IFMS, BBMP tender and Karnataka Public Procurement Portal records. Every fact is
   <span class="conf c-ok">confirmed</span> <span class="conf c-inf">inferred</span> or <span class="conf c-unk">unknown</span>, and links to its source.
   <b>Signals and cases are observations for follow-up, not findings of wrongdoing.</b>
+  {% if data_as_of %}<br>Data as of {{ data_as_of|dt }}. {% endif %}Data and text: <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>; code: MIT.
   <a href="{{ url_for('coverage') }}">What this data cannot show</a> · <a href="{{ url_for('methodology') }}">Methodology</a> · <a href="{{ url_for('about') }}">About &amp; corrections</a>{% if repo_url %} · <a href="{{ repo_url }}" rel="noopener">Source code</a>{% endif %}
 </footer>
 </body>

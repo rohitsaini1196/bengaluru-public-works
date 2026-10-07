@@ -26,7 +26,9 @@ from ingest import parse, scope
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "data" / "raw" / "bbmp_discovery"
-START, END = date(2015, 4, 1), date(2026, 9, 30)
+START = date(2015, 4, 1)
+END = date.today()                      # discovery always runs up to today
+OPEN_DAYS = 7                           # a quarter that ended less than this long ago is refetched (late RTGS postings)
 PHONE = re.compile(r"(?:<br\s*/?>)?\s*(?:\+?91)?[0-9]{10}\s*$")
 
 
@@ -52,13 +54,24 @@ def sanitize(rows):
     return out
 
 
-def fetch(force=False):
+def quarter_end(d):
+    m = (d.month - 1) // 3 * 3 + 4
+    return date(d.year + (m - 1) // 12, (m - 1) % 12 + 1, 1) - timedelta(days=1)
+
+
+def fetch(force=False, today=None):
+    """One cached file per calendar quarter (named by the full quarter). Closed quarters are fetched once; the
+    current quarter (and one that closed within OPEN_DAYS) is refetched on every run, because a bill appears in
+    the grid on its RTGS (payment) date and that date never changes afterwards."""
+    today = today or date.today()
     OUT.mkdir(parents=True, exist_ok=True)
     F._open(F.PAGE)
     n_req = 0
-    for a, b in quarters():
-        dest = OUT / f"{a.isoformat()}_{b.isoformat()}.json"
-        if dest.exists() and not force:
+    for a, b in quarters(START, today):
+        qe = quarter_end(a)
+        dest = OUT / f"{a.isoformat()}_{qe.isoformat()}.json"
+        still_open = qe >= today - timedelta(days=OPEN_DAYS)
+        if dest.exists() and not force and not still_open:
             continue
         rows, url = F.call("LoadPaymentGridData", pDateFrom=fmt(a), pDateTo=fmt(b), pBudgetHeadID=-1,
                            pWardIDs="", pDDOID=-1, pDDOIDs="")
@@ -66,8 +79,9 @@ def fetch(force=False):
         if not isinstance(rows, list):
             print("error", a, b, rows)
             continue
-        dest.write_text(json.dumps({"from": a.isoformat(), "to": b.isoformat(), "url": url, "rows": sanitize(rows)}))
-        print(a, b, len(rows), flush=True)
+        dest.write_text(json.dumps({"from": a.isoformat(), "to": b.isoformat(), "url": url, "rows": sanitize(rows),
+                                    "complete": not still_open}))
+        print(a, b, len(rows), "(open quarter)" if still_open else "", flush=True)
     return n_req
 
 

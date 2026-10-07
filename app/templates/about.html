@@ -14,6 +14,10 @@ better documents were read, and that is shown on the <a href="{{ url_for('cases_
   <li>Quote confidence labels with the fact: an <i>inferred</i> value is not a confirmed one.</li>
   <li>Projects can be downloaded as JSON from <a href="{{ api_href('api_projects') }}">/api/projects</a>; cases from <a href="{{ api_href('api_cases') }}">/api/cases</a>.</li>
 </ul>
+<h2>Licence</h2>
+<p>The data, case packs and text on this site are licensed under <a href="https://creativecommons.org/licenses/by/4.0/" rel="noopener">CC BY 4.0</a>:
+reuse them freely with credit to the Bengaluru Public Works Explorer, and keep the confidence labels with any fact you quote.
+The code is MIT. Government documents behind the source links belong to their publishers.</p>
 <h2>Corrections and contact</h2>
 <p>If a fact is wrong, or a document explains an open question, please report it{% if repo_url %} as an issue on <a href="{{ repo_url }}" rel="noopener">the repository</a>{% endif %}{% if contact %} or write to {{ contact }}{% endif %}.
 Corrections that resolve a case are welcome and will be reflected in the data.</p>

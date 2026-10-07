@@ -195,6 +195,12 @@ def export_dataset(db=PUBLIC_DB, out=DATASET):
     (out / "cases.json").write_text(json.dumps(cases, indent=1, ensure_ascii=False))
     manifest["cases.json"] = len(cases)
     con.close()
+    (out / "LICENSE.txt").write_text(
+        "Bengaluru Public Works Explorer — generated dataset.\n"
+        "Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/\n"
+        "Attribution: Bengaluru Public Works Explorer (https://rohitsaini1196.github.io/bengaluru-public-works/), CC BY 4.0.\n"
+        "Keep the confidence labels (confirmed / inferred / unknown) with any fact you reuse. Signals and cases are observations\n"
+        "for follow-up, not findings of wrongdoing. Source documents belong to their publishers and are linked, not included.\n")
     for f in sorted(out.iterdir()):
         manifest[f.name] = {"rows": manifest.get(f.name), "sha256": hashlib.sha256(f.read_bytes()).hexdigest()}
     (out / "MANIFEST.json").write_text(json.dumps(manifest, indent=1))

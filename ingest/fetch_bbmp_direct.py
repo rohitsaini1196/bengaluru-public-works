@@ -258,5 +258,45 @@ def load_cache():
     return out
 
 
+def invalidate_active(days=730, today=None):
+    """Make the next run re-check what can still change: the bill list of every active job (no final bill paid,
+    or a bill registered / paid within `days`) and every bill not yet paid. Closed jobs and paid bills stay cached
+    (a paid bill's amounts, dates and documents do not change). Returns (jobs, bills) invalidated."""
+    from datetime import date, timedelta
+    cutoff = ((today or date.today()) - timedelta(days=days)).isoformat()
+    cache = load_cache()
+    jobs_dir = OUT / "jobs"
+    n_jobs = n_bills = 0
+    for jf in sorted(jobs_dir.glob("*.json")) if jobs_dir.exists() else []:
+        rows = json.loads(jf.read_text())
+        bills = [cache.get(str(r.get("wbid"))) for r in rows if r.get("wbid")]
+        dets = [b.get("details") for b in bills if b and isinstance(b.get("details"), dict)]
+        final_paid = any("final" in (d.get("billtype") or "").lower() and (d.get("rtgs") or "").strip() for d in dets)
+        recent = any(max(_iso(d.get("sbrdate")), _iso(d.get("rtgsdate"))) >= cutoff for d in dets)
+        if not final_paid or recent or not dets:
+            jf.unlink()
+            n_jobs += 1
+            for b in bills:
+                d = (b or {}).get("details")
+                if b and isinstance(d, dict) and not (d.get("rtgs") or "").strip():
+                    (OUT / "bills" / f"{b['work_bill_id']}.json").unlink(missing_ok=True)
+                    n_bills += 1
+    return n_jobs, n_bills
+
+
+def _iso(s):
+    """'2025-07-01' / '01-Jul-2025' -> '2025-07-01'; '' when unreadable."""
+    from datetime import datetime
+    s = (s or "").strip()[:11]
+    for fmt in ("%Y-%m-%d", "%d-%b-%Y"):
+        try:
+            return datetime.strptime(s, fmt).date().isoformat()
+        except ValueError:
+            pass
+    return ""
+
+
 if __name__ == "__main__":
+    if "--refresh-active" in sys.argv:
+        print("invalidated (jobs, unpaid bills):", invalidate_active())
     main(check_only="--check" in sys.argv, files="--no-files" not in sys.argv)

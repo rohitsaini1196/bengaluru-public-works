@@ -19,7 +19,7 @@ Status as of 7 Oct 2026. `[x]` = done and verified locally; `[ ]` = needs a deci
 - [x] Contact data removed: contractor mobile and e-mail stripped at collection; OCR'd letterhead e-mails and phones (6 found) scrubbed at publish; publish aborts on any survivor; every public page scanned in tests
 - [x] Raw caches excluded (`.gitignore`, `.dockerignore`); the image contains only `app/`, Gunicorn config and the public DB
 - [x] Public DB / read model prepared (`python -m ingest.publish`) with a CSV/JSON dataset and checksums
-- [ ] **Decide the dataset licence (CC BY 4.0 recommended) and the copyright holder name in `LICENSE`**
+- [x] Dataset licence: CC BY 4.0 (`DATA_LICENSE.md`, plus `LICENSE.txt` in the exported dataset); code MIT
 - [x] Unrelated material (`fitment_study/`, `screenshots/`, `hinglish_search_benchmark.xlsx`) moved out of the repository folder to `../kora_bots_unrelated/`
 
 ## Content
@@ -33,8 +33,8 @@ Status as of 7 Oct 2026. `[x]` = done and verified locally; `[ ]` = needs a deci
 ## Infrastructure: GitHub Pages (free, recommended)
 - [x] Static export builds (789 pages, ~14 MB) with 0 broken internal links; browser filters verified equal to server filters (tests/test_static.py)
 - [x] Workflow `.github/workflows/pages.yml` runs the public tests, freezes with the repository's base path and deploys
-- [ ] **Create the GitHub repository, push (including `data/public/koramangala_public.db`), and set Settings → Pages → Source: GitHub Actions**
-- [ ] Check the first Actions run and open `https://<user>.github.io/<repo>/`
+- [x] GitHub repository created and pushed; Pages source set to GitHub Actions
+- [x] Live at https://rohitsaini1196.github.io/bengaluru-public-works/ (build + tests + deploy green)
 
 ## Infrastructure: self-hosted alternative
 - [x] Deployment documented (Docker Compose: Caddy → Gunicorn → Flask; systemd alternative)

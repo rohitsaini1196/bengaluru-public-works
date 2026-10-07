@@ -185,12 +185,15 @@ SITE_NAME = "Bengaluru Public Works Explorer"
 def area_info():
     """The area this database covers (meta 'area', written by ingest.publish); Koramangala for older builds."""
     if "area" not in g:
-        info = {"area": "Koramangala", "city": "Bengaluru"}
+        info = {"area": "Koramangala", "city": "Bengaluru", "data_as_of": None}
         try:
             row = db().execute("SELECT value FROM meta WHERE key = 'area'").fetchone()
             if row:
                 a = json.loads(row[0])
-                info = {"area": a.get("area_name") or info["area"], "city": a.get("city") or info["city"]}
+                info.update(area=a.get("area_name") or info["area"], city=a.get("city") or info["city"])
+            row = db().execute("SELECT value FROM meta WHERE key = 'published_at'").fetchone()
+            if row:
+                info["data_as_of"] = row[0][:10]
         except Exception:                # no database (error pages): keep the defaults
             pass
         g.area = info

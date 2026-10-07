@@ -71,8 +71,8 @@ def main(force=False):
         d = OUT / nit
         d.mkdir(exist_ok=True)
         manifest = d / "manifest.json"
-        if manifest.exists() and not force:
-            continue
+        if manifest.exists() and not force and json.loads(manifest.read_text()).get("comparative"):
+            continue                 # the comparative statement appears after evaluation: re-check until it exists
         files = []
         for f in j.get("files") or []:
             name, uuid = f.get("fileName"), f.get("uuid")
@@ -80,15 +80,20 @@ def main(force=False):
                 continue
             url = f"{KPPP_API}/{nit}/works-tender-file/{uuid}/download-file"
             dest = d / name.replace("/", "_")
-            blob = _get(url)
-            if not blob:
-                continue
-            dest.write_bytes(blob)
-            txt = to_text(dest) if dest.suffix.lower() in TEXT_EXT else ""
-            if txt:
-                dest.with_suffix(dest.suffix + ".txt").write_text(txt)
+            fetched = False
+            if not dest.exists():            # documents already on disk are reused (only re-checks for the comparative)
+                blob = _get(url)
+                if not blob:
+                    continue
+                dest.write_bytes(blob)
+                fetched = True
+            txt_file = dest.with_suffix(dest.suffix + ".txt")
+            txt = txt_file.read_text() if txt_file.exists() else (to_text(dest) if dest.suffix.lower() in TEXT_EXT else "")
+            if txt and not txt_file.exists():
+                txt_file.write_text(txt)
             files.append({"name": dest.name, "url": url, "documentType": f.get("documentType"), "has_text": bool(txt)})
-            time.sleep(0.2)
+            if fetched:
+                time.sleep(0.2)
         cmp_url = f"{KPPP_API}/tender-eval/{nit}/commercial-evaluation/tender-category/WORKS/commercial-comparison/download-detailed"
         blob = _get(cmp_url)
         cmp = None
