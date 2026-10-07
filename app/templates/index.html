@@ -13,25 +13,29 @@
 </section>
 
 <form class="search" id="explorer" method="get" action="{{ url_for('index') }}">
-  <input type="search" name="q" value="{{ args.q }}" placeholder="Search work, road, block, contractor, job or tender no." aria-label="Search projects">
-  <select name="category" aria-label="Category"><option value="">All categories</option>
-    {% for f in facets.category %}<option value="{{ f[0] }}" {{ 'selected' if args.category == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select>
-  <select name="status" aria-label="Status"><option value="">All statuses</option>
-    {% for f in facets.status %}<option value="{{ f[0] }}" {{ 'selected' if args.status == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select>
-  <select name="signal" aria-label="Signal"><option value="">Any / no signal</option>
-    {% for f in facets.signal %}<option value="{{ f[0] }}" {{ 'selected' if args.signal == f[0] }}>{{ SIGNAL_NAMES.get(f[0], f[0]) }} ({{ f[1] }})</option>{% endfor %}</select>
-  <select name="depth" aria-label="Lifecycle evidence"><option value="">Any lifecycle evidence</option>
-    {% for n in [6,5,4,3] %}<option value="{{ n }}" {{ 'selected' if args.depth == n|string }}>{{ n }}+ of 6 stages</option>{% endfor %}</select>
-  <select name="dept" aria-label="Department"><option value="">All departments</option>
-    {% for f in facets.dept %}<option value="{{ f[0] }}" {{ 'selected' if args.dept == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select>
-  <select name="sort" aria-label="Sort">
-    {% for k, l in [('recent','Most recent activity'),('depth','Most complete story'),('signals','Most signals'),('value','Largest value'),('paid','Most paid'),('oldest','Oldest first')] %}
-    <option value="{{ k }}" {{ 'selected' if sort == k }}>{{ l }}</option>{% endfor %}</select>
-  <fieldset class="flags"><legend class="small muted">Has:</legend>
-    {% for k, label in FLAGS.items() %}<label class="small"><input type="checkbox" name="has" value="{{ k }}" {{ 'checked' if k in flags }}> {{ label }}</label>{% endfor %}
+  <div class="sbox">
+    <input type="search" name="q" value="{{ args.q }}" placeholder="Search a road, block, contractor, job or tender number" aria-label="Search projects">
+    <button type="submit">Search</button>
+  </div>
+  <div class="filters">
+    <label><span>Kind of work</span><select name="category"><option value="">All</option>
+      {% for f in facets.category %}<option value="{{ f[0] }}" {{ 'selected' if args.category == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select></label>
+    <label><span>Status</span><select name="status"><option value="">All</option>
+      {% for f in facets.status %}<option value="{{ f[0] }}" {{ 'selected' if args.status == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select></label>
+    <label><span>Signal</span><select name="signal"><option value="">Any or none</option>
+      {% for f in facets.signal %}<option value="{{ f[0] }}" {{ 'selected' if args.signal == f[0] }}>{{ SIGNAL_NAMES.get(f[0], f[0]) }} ({{ f[1] }})</option>{% endfor %}</select></label>
+    <label><span>Lifecycle evidence</span><select name="depth"><option value="">Any</option>
+      {% for n in [6,5,4,3] %}<option value="{{ n }}" {{ 'selected' if args.depth == n|string }}>{{ n }}+ of 6 stages</option>{% endfor %}</select></label>
+    <label><span>Department</span><select name="dept"><option value="">All</option>
+      {% for f in facets.dept %}<option value="{{ f[0] }}" {{ 'selected' if args.dept == f[0] }}>{{ f[0] }} ({{ f[1] }})</option>{% endfor %}</select></label>
+    <label><span>Sort by</span><select name="sort">
+      {% for k, l in [('recent','Most recent activity'),('value','Largest value'),('paid','Most paid'),('signals','Most signals'),('depth','Most complete story'),('oldest','Oldest first')] %}
+      <option value="{{ k }}" {{ 'selected' if sort == k }}>{{ l }}</option>{% endfor %}</select></label>
+  </div>
+  <fieldset class="flags"><legend>Only works with</legend>
+    {% for k, label in FLAGS.items() %}<label class="toggle"><input type="checkbox" name="has" value="{{ k }}" {{ 'checked' if k in flags }}><span>{{ label }}</span></label>{% endfor %}
+    {% if config.STATIC or args.values()|select|list or flags %}<a class="reset" href="{{ url_for('index') }}">Clear all</a>{% endif %}
   </fieldset>
-  <button type="submit">Search</button>
-  {% if config.STATIC or args.values()|select|list or flags %}<a class="reset" href="{{ url_for('index') }}">Clear</a>{% endif %}
 </form>
 
 <p class="count" id="count">{{ summary.n }} project{{ '' if summary.n == 1 else 's' }}{% if summary.n != total.n %} · {{ summary.paid|inr or '₹0' }} paid · {{ summary.contract|inr or '₹0' }} awarded{% endif %}</p>
